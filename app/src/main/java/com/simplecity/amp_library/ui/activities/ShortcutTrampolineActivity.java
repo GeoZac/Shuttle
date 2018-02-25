@@ -16,7 +16,7 @@ import io.reactivex.schedulers.Schedulers;
 
 public class ShortcutTrampolineActivity extends AppCompatActivity {
 
-    private static final String TAG = "ShortcutTrampolineActiv";
+    private static final String TAG = "ShortcutTrampolineActivity";
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -25,8 +25,13 @@ public class ShortcutTrampolineActivity extends AppCompatActivity {
         final String action = getIntent().getAction();
         switch (action) {
             case MusicService.ShortcutCommands.PLAY:
-            case MusicService.ShortcutCommands.SHUFFLE_ALL:
                 Intent intent = new Intent(this, MusicService.class);
+                intent.setAction(action);
+                startService(intent);
+                finish();
+                break;
+            case MusicService.ShortcutCommands.SHUFFLE_ALL:
+                intent = new Intent(this, MusicService.class);
                 intent.setAction(action);
                 startService(intent);
                 finish();
