@@ -210,7 +210,7 @@ android {
 
 dependencies {
 
-    implementation fileTree(include: '*.jar', dir: 'libs')
+
 
     // //////////////////////////////////////////////////////////////////////////
     // Google libs
@@ -266,6 +266,7 @@ dependencies {
     implementation libs.rxBroadcast
     implementation libs.rxPrefs
     implementation 'com.tspoon.traceur:traceur:1.0.1'
+    implementation 'org.bitbucket.ijabz:jaudiotagger:v2.2.4'
 
     implementation libs.streams
     implementation(libs.crashlytics) {
