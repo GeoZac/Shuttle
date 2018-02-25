@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <shortcuts xmlns:android="http://schemas.android.com/apk/res/android"
-           xmlns:app="http://schemas.android.com/apk/res-auto">
+    xmlns:app="http://schemas.android.com/apk/res-auto">
 
-   <shortcut
+    <shortcut
         android:enabled="true"
         android:icon="@drawable/shortcut_play"
         android:shortcutDisabledMessage="@string/shortcut_play_disabled"
@@ -16,9 +16,9 @@
         <intent
             android:action="com.simplecity.amp_library.shortcuts.PLAY"
             android:targetClass="com.simplecity.amp_library.ui.activities.ShortcutTrampolineActivity"
-            android:targetPackage="{applicationId}"/>
+            android:targetPackage="{applicationId}" />
     </shortcut>
-           
+
     <shortcut
         android:enabled="true"
         android:icon="@drawable/shortcut_shuffle"
@@ -33,9 +33,9 @@
         <intent
             android:action="com.simplecity.amp_library.shortcuts.SHUFFLE"
             android:targetClass="com.simplecity.amp_library.ui.activities.ShortcutTrampolineActivity"
-            android:targetPackage="{applicationId}"/>
-    </shortcut> 
-           
+            android:targetPackage="{applicationId}" />
+    </shortcut>
+
     <shortcut
         android:enabled="true"
         android:icon="@drawable/shortcut_folder"
@@ -50,24 +50,24 @@
         <intent
             android:action="com.simplecity.amp_library.shortcuts.FOLDERS"
             android:targetClass="com.simplecity.amp_library.ui.activities.ShortcutTrampolineActivity"
-            android:targetPackage="{applicationId}"/>
+            android:targetPackage="{applicationId}" />
     </shortcut>
 
-    <!--<shortcut-->
-        <!--android:enabled="true"-->
-        <!--android:icon="@drawable/shortcut_playlist"-->
-        <!--android:shortcutDisabledMessage="@string/shortcut_playlist_disabled"-->
-        <!--android:shortcutId="playlist"-->
-        <!--android:shortcutLongLabel="@string/shortcut_playlist_long_label"-->
-        <!--android:shortcutShortLabel="@string/shortcut_playlist_short_label"-->
-        <!--app:shortcutDisabledMessage="@string/shortcut_playlist_disabled"-->
-        <!--app:shortcutId="playlist"-->
-        <!--app:shortcutLongLabel="@string/shortcut_playlist_long_label"-->
-        <!--app:shortcutShortLabel="@string/shortcut_playlist_short_label">-->
-        <!--<intent-->
-            <!--android:action="com.simplecity.amp_library.shortcuts.PLAYLIST"-->
-            <!--android:targetClass="com.simplecity.amp_library.ui.activities.ShortcutTrampolineActivity"-->
-            <!--android:targetPackage="{applicationId}"/>-->
-    <!--</shortcut>-->
-   
+    <shortcut
+        android:enabled="true"
+        android:icon="@drawable/shortcut_playlist"
+        android:shortcutDisabledMessage="@string/shortcut_playlist_disabled"
+        android:shortcutId="playlist"
+        android:shortcutLongLabel="@string/shortcut_playlist_long_label"
+        android:shortcutShortLabel="@string/shortcut_playlist_short_label"
+        app:shortcutDisabledMessage="@string/shortcut_playlist_disabled"
+        app:shortcutId="playlist"
+        app:shortcutLongLabel="@string/shortcut_playlist_long_label"
+        app:shortcutShortLabel="@string/shortcut_playlist_short_label">
+        <intent
+            android:action="com.simplecity.amp_library.shortcuts.PLAYLIST"
+            android:targetClass="com.simplecity.amp_library.ui.activities.ShortcutTrampolineActivity"
+            android:targetPackage="{applicationId}" />
+    </shortcut>
+
 </shortcuts>
