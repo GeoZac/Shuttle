@@ -24,6 +24,7 @@ object Dependencies {
         const val daggerAnnotationProcessor = "2.14.1"
         const val expandableRecyclerView = "3.0.0-RC1"
         const val billing = "1.0"
+        const val tagger = "2.2.4"
     }
 
     // NanoHttp - https://github.com/NanoHttpd/nanohttpd (Various)
@@ -67,6 +68,9 @@ object Dependencies {
 
     // In app purchases
     const val billing = "com.android.billingclient:billing:${Versions.billing}"
+
+    // Tag editing
+    const val tagediting = "org.bitbucket.ijabz:jaudiotagger:v${Versions.tagger}"
 
 
     object Plugins {

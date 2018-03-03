@@ -259,6 +259,7 @@ dependencies {
     implementation Dependencies.materialDialogCommons
     implementation Dependencies.expandableRecyclerView
     implementation Dependencies.billing
+    implementation Dependencies.tagediting
 
     implementation Dependencies.butterknife
     annotationProcessor Dependencies.butterknifeAnnotationProcessor
