@@ -27,6 +27,10 @@ object Dependencies {
         const val tagger = "2.2.4"
     }
 
+    // Kotlin
+
+    const val kotlin = "org.jetbrains.kotlin:kotlin-stdlib-jdk7:${Plugins.Versions.kotlin}"
+
     // NanoHttp - https://github.com/NanoHttpd/nanohttpd (Various)
     const val nanoHttp = "org.nanohttpd:nanohttpd-webserver:${Versions.nanoHttp}"
 
@@ -77,6 +81,7 @@ object Dependencies {
 
         object Versions {
             const val androidGradlePlugin = "3.2.0-alpha04"
+            const val kotlin = "1.2.30"
             const val dexcountGradlePlugin = "0.8.2"
             const val fabricGradlePlugin = "1.+"
             const val playPublisher = "1.2.0"
@@ -85,6 +90,7 @@ object Dependencies {
         }
 
         const val android = "com.android.tools.build:gradle:${Versions.androidGradlePlugin}"
+        const val kotlin = "org.jetbrains.kotlin:kotlin-gradle-plugin:${Versions.kotlin}"
         const val dexcount = "com.getkeepsafe.dexcount:dexcount-gradle-plugin:${Versions.dexcountGradlePlugin}"
         const val fabric = "io.fabric.tools:gradle:${Versions.fabricGradlePlugin}"
         const val playPublisher = "com.github.triplet.gradle:play-publisher:${Versions.playPublisher}"
@@ -244,6 +250,7 @@ object Dependencies {
 
         const val androidApplication = "com.android.application"
         const val androidLibrary = "com.android.library"
+        const val kotlin = "kotlin-android"
         const val dexCount = "com.getkeepsafe.dexcount"
         const val fabric = "io.fabric"
         const val playPublisher = "com.github.triplet.play"
