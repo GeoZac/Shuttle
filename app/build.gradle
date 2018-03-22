@@ -12,7 +12,7 @@ buildscript {
     }
     dependencies {
         classpath Dependencies.Plugins.android
-        classpath Dependencies.Plugins.dexcount
+        //classpath Dependencies.Plugins.dexcount
         classpath Dependencies.Plugins.fabric
     }
 }
@@ -25,7 +25,7 @@ apply plugin: Dependencies.BuildPlugins.androidApplication
 apply plugin: Dependencies.BuildPlugins.kotlin
 apply plugin: Dependencies.BuildPlugins.kotlinAndroidExtensions
 apply plugin: Dependencies.BuildPlugins.kapt
-apply plugin: Dependencies.BuildPlugins.dexCount
+//apply plugin: Dependencies.BuildPlugins.dexCount
 apply plugin: Dependencies.BuildPlugins.fabric
 
 repositories {
