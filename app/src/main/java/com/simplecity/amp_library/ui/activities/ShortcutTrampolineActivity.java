@@ -8,6 +8,7 @@ import android.support.v7.app.AppCompatActivity;
 import com.annimon.stream.Optional;
 import com.simplecity.amp_library.model.Playlist;
 import com.simplecity.amp_library.playback.MusicService;
+import com.simplecity.amp_library.playback.constants.ShortcutCommands;
 import com.simplecity.amp_library.utils.LogUtils;
 import com.simplecity.amp_library.utils.PlaylistUtils;
 
@@ -42,7 +43,7 @@ public class ShortcutTrampolineActivity extends AppCompatActivity {
                 startActivity(intent);
                 finish();
                 break;
-            case MusicService.ShortcutCommands.PLAYLIST:
+            case ShortcutCommands.PLAYLIST:
                 intent = new Intent(this, MainActivity.class);
                 intent.setAction(action);
                 Playlist.favoritesPlaylist()
