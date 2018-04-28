@@ -1,7 +1,6 @@
 package com.simplecity.amp_library.model;
 
 import android.content.ContentUris;
-import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
 import android.provider.MediaStore;
@@ -17,8 +16,8 @@ import com.simplecity.amp_library.sql.providers.PlayCountTable;
 import com.simplecity.amp_library.sql.sqlbrite.SqlBriteUtils;
 import com.simplecity.amp_library.utils.ComparisonUtils;
 import com.simplecity.amp_library.utils.DataManager;
-import com.simplecity.amp_library.utils.MusicUtils;
 import com.simplecity.amp_library.utils.PlaylistUtils;
+import com.simplecity.amp_library.utils.SettingsManager;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -160,17 +159,18 @@ public class Playlist implements Serializable {
         return DataManager.getInstance().getPlaylistsRelay()
                 .first(Collections.emptyList())
                 .flatMapObservable(Observable::fromIterable)
-                .filter(playlist ->  playlist.type == Type.FAVORITES)
+                .filter(playlist -> playlist.type == Type.FAVORITES)
                 .map(Optional::of)
                 .switchIfEmpty(Observable.fromCallable(PlaylistUtils::createFavoritePlaylist))
                 .firstOrError();
     }
 
-    public void delete(Context context) {
+    public boolean delete() {
         Uri uri = ContentUris.withAppendedId(MediaStore.Audio.Playlists.EXTERNAL_CONTENT_URI, id);
         if (uri != null) {
-            context.getContentResolver().delete(uri, null, null);
+            return ShuttleApplication.getInstance().getContentResolver().delete(uri, null, null) > 0;
         }
+        return false;
     }
 
     public void removeSong(@NonNull Song song, @Nullable UnsafeConsumer<Boolean> success) {
@@ -184,7 +184,7 @@ public class Playlist implements Serializable {
     public Observable<List<Song>> getSongsObservable() {
 
         if (id == PlaylistUtils.PlaylistIds.RECENTLY_ADDED_PLAYLIST) {
-            int numWeeks = MusicUtils.getIntPref(ShuttleApplication.getInstance(), "numweeks", 2) * (3600 * 24 * 7);
+            int numWeeks = SettingsManager.getInstance().getNumWeeks() * 3600 * 24 * 7;
             return DataManager.getInstance().getSongsObservable(song -> song.dateAdded > (System.currentTimeMillis() / 1000 - numWeeks))
                     .map(songs -> {
                         Collections.sort(songs, (a, b) -> ComparisonUtils.compare(a.albumArtistName, b.albumArtistName));

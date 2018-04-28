@@ -1,10 +1,8 @@
 package com.simplecity.amp_library.utils;
 
 import android.annotation.SuppressLint;
-import android.content.Context;
-import android.content.SharedPreferences;
-import android.content.SharedPreferences.Editor;
 import android.net.Uri;
+import android.support.annotation.Nullable;
 
 import com.simplecity.amp_library.R;
 import com.simplecity.amp_library.ShuttleApplication;
@@ -68,7 +66,7 @@ public class MusicUtils {
     }
 
     /**
-     * Shuffles all songs in a given song list
+     * Shuffles all songs in the given song list
      */
     @SuppressLint("CheckResult")
     public static void shuffleAll(Single<List<Song>> songsSingle, UnsafeConsumer<String> onEmpty) {
@@ -77,11 +75,18 @@ public class MusicUtils {
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(
                         songs -> {
-                            if (!songs.isEmpty()) {
-                                playAll(songs, new Random().nextInt(songs.size()), false, onEmpty);
-                            }
+                            shuffleAll(songs, onEmpty);
                         },
                         e -> LogUtils.logException(TAG, "Shuffle all error", e));
+    }
+
+    /**
+     * Shuffles all songs in the given list
+     */
+    public static void shuffleAll(List<Song> songs, UnsafeConsumer<String> onEmpty) {
+        if (!songs.isEmpty()) {
+            playAll(songs, new Random().nextInt(songs.size()), false, onEmpty);
+        }
     }
 
     /**
@@ -110,38 +115,15 @@ public class MusicUtils {
     }
 
     /**
-     * Method getIntPref.
-     *
-     * @param context Context
-     * @param name    String
-     * @param def     int
-     * @return int
-     */
-    public static int getIntPref(Context context, String name, int def) {
-        final SharedPreferences prefs = context.getSharedPreferences(context.getPackageName(), Context.MODE_PRIVATE);
-        return prefs.getInt(name, def);
-    }
-
-    /**
-     * Method setIntPref.
-     *
-     * @param context Context
-     * @param name    String
-     * @param value   int
-     */
-    static void setIntPref(Context context, String name, int value) {
-        final SharedPreferences prefs = context.getSharedPreferences(context.getPackageName(), Context.MODE_PRIVATE);
-        final Editor editor = prefs.edit();
-        editor.putInt(name, value);
-        editor.apply();
-    }
-
-    /**
      * @return {@link String} The path to the currently playing file
      */
+    @Nullable
     public static String getFilePath() {
         if (MusicServiceConnectionUtils.serviceBinder != null && MusicServiceConnectionUtils.serviceBinder.getService() != null) {
-            return MusicServiceConnectionUtils.serviceBinder.getService().getPath();
+            Song song = MusicServiceConnectionUtils.serviceBinder.getService().getSong();
+            if (song != null) {
+                return song.path;
+            }
         }
         return null;
     }
@@ -190,7 +172,7 @@ public class MusicUtils {
      */
     public static void next() {
         if (MusicServiceConnectionUtils.serviceBinder != null && MusicServiceConnectionUtils.serviceBinder.getService() != null) {
-            MusicServiceConnectionUtils.serviceBinder.getService().next();
+            MusicServiceConnectionUtils.serviceBinder.getService().gotoNext(true);
         }
     }
 
@@ -207,7 +189,7 @@ public class MusicUtils {
             }
         } else {
             if (MusicServiceConnectionUtils.serviceBinder != null && MusicServiceConnectionUtils.serviceBinder.getService() != null) {
-                MusicServiceConnectionUtils.serviceBinder.getService().prev();
+                MusicServiceConnectionUtils.serviceBinder.getService().previous();
             }
         }
     }
@@ -233,27 +215,6 @@ public class MusicUtils {
             return MusicServiceConnectionUtils.serviceBinder.getService().getAudioSessionId();
         }
         return 0;
-    }
-
-    public static String getAlbumName() {
-        if (MusicServiceConnectionUtils.serviceBinder != null && MusicServiceConnectionUtils.serviceBinder.getService() != null) {
-            return MusicServiceConnectionUtils.serviceBinder.getService().getAlbumName();
-        }
-        return null;
-    }
-
-    public static String getAlbumArtistName() {
-        if (MusicServiceConnectionUtils.serviceBinder != null && MusicServiceConnectionUtils.serviceBinder.getService() != null) {
-            return MusicServiceConnectionUtils.serviceBinder.getService().getAlbumArtistName();
-        }
-        return null;
-    }
-
-    public static String getSongName() {
-        if (MusicServiceConnectionUtils.serviceBinder != null && MusicServiceConnectionUtils.serviceBinder.getService() != null) {
-            return MusicServiceConnectionUtils.serviceBinder.getService().getSongName();
-        }
-        return null;
     }
 
     /**
@@ -309,7 +270,7 @@ public class MusicUtils {
     public static long getPosition() {
         if (MusicServiceConnectionUtils.serviceBinder != null && MusicServiceConnectionUtils.serviceBinder.getService() != null) {
             try {
-                return MusicServiceConnectionUtils.serviceBinder.getService().getPosition();
+                return MusicServiceConnectionUtils.serviceBinder.getService().getSeekPosition();
             } catch (final Exception ignored) {
             }
         }
@@ -323,9 +284,9 @@ public class MusicUtils {
      */
     public static long getDuration() {
         if (MusicServiceConnectionUtils.serviceBinder != null && MusicServiceConnectionUtils.serviceBinder.getService() != null) {
-            try {
-                return MusicServiceConnectionUtils.serviceBinder.getService().getDuration();
-            } catch (Exception ignored) {
+            Song song = MusicServiceConnectionUtils.serviceBinder.getService().getSong();
+            if (song != null) {
+                return song.duration;
             }
         }
         return 0;
