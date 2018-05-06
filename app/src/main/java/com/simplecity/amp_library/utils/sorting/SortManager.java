@@ -1,14 +1,13 @@
-package com.simplecity.amp_library.utils;
+package com.simplecity.amp_library.utils.sorting;
 
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
-
 import com.simplecity.amp_library.ShuttleApplication;
 import com.simplecity.amp_library.model.Album;
 import com.simplecity.amp_library.model.AlbumArtist;
 import com.simplecity.amp_library.model.Playlist;
 import com.simplecity.amp_library.model.Song;
-
+import com.simplecity.amp_library.utils.ComparisonUtils;
 import java.util.Collections;
 import java.util.List;
 
@@ -85,7 +84,6 @@ public class SortManager {
         return mPrefs.getBoolean(Key.SONGS_ASC, true);
     }
 
-
     //Detail Fragment:
 
     //  Songs sort order
@@ -119,7 +117,7 @@ public class SortManager {
     }
 
     public int getGenreDetailSongsSortOrder() {
-        return mPrefs.getInt(Key.GENRE_DETAIL_SONGS, SongSort.DEFAULT);
+        return mPrefs.getInt(Key.GENRE_DETAIL_SONGS, SongSort.DETAIL_DEFAULT);
     }
 
     // Albums sort order
@@ -207,7 +205,6 @@ public class SortManager {
     public boolean getGenreDetailAlbumsAscending() {
         return mPrefs.getBoolean(Key.GENRE_DETAIL_ALBUMS_ASC, true);
     }
-
 
     static int PREF_VERSION = 0;
 

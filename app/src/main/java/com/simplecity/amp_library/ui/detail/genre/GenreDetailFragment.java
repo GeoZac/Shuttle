@@ -27,7 +27,10 @@ import android.view.ViewGroup;
 import android.view.animation.AnimationUtils;
 import android.widget.ImageView;
 import android.widget.Toast;
-
+import butterknife.BindView;
+import butterknife.ButterKnife;
+import butterknife.OnClick;
+import butterknife.Unbinder;
 import com.afollestad.aesthetic.Aesthetic;
 import com.annimon.stream.Collectors;
 import com.annimon.stream.Stream;
@@ -42,7 +45,8 @@ import com.simplecity.amp_library.model.Album;
 import com.simplecity.amp_library.model.ArtworkProvider;
 import com.simplecity.amp_library.model.Genre;
 import com.simplecity.amp_library.model.Song;
-import com.simplecity.amp_library.ui.detail.DetailSortHelper;
+import com.simplecity.amp_library.utils.sorting.AlbumSortHelper;
+import com.simplecity.amp_library.utils.sorting.SongSortHelper;
 import com.simplecity.amp_library.ui.detail.album.AlbumDetailFragment;
 import com.simplecity.amp_library.ui.drawer.DrawerLockManager;
 import com.simplecity.amp_library.ui.fragments.BaseFragment;
@@ -64,7 +68,7 @@ import com.simplecity.amp_library.utils.PlaceholderProvider;
 import com.simplecity.amp_library.utils.PlaylistUtils;
 import com.simplecity.amp_library.utils.ResourceUtils;
 import com.simplecity.amp_library.utils.ShuttleUtils;
-import com.simplecity.amp_library.utils.SortManager;
+import com.simplecity.amp_library.utils.sorting.SortManager;
 import com.simplecity.amp_library.utils.StringUtils;
 import com.simplecity.amp_library.utils.TypefaceManager;
 import com.simplecity.amp_library.utils.menu.album.AlbumMenuFragmentHelper;
@@ -75,20 +79,13 @@ import com.simplecityapps.recycler_adapter.adapter.CompletionListUpdateCallbackA
 import com.simplecityapps.recycler_adapter.adapter.ViewModelAdapter;
 import com.simplecityapps.recycler_adapter.model.ViewModel;
 import com.simplecityapps.recycler_adapter.recyclerview.RecyclerListener;
-
-import org.jetbrains.annotations.NotNull;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
-import butterknife.BindView;
-import butterknife.ButterKnife;
-import butterknife.OnClick;
-import butterknife.Unbinder;
 import io.reactivex.Single;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import org.jetbrains.annotations.NotNull;
 
 import static com.afollestad.aesthetic.Rx.distinctToMainThread;
 
@@ -308,8 +305,8 @@ public class GenreDetailFragment extends BaseFragment implements
         getActivity().getMenuInflater().inflate(R.menu.menu_detail_sort_albums, item.getSubMenu());
         getActivity().getMenuInflater().inflate(R.menu.menu_detail_sort_songs, item.getSubMenu());
 
-        DetailSortHelper.updateAlbumSortMenuItems(toolbar, SortManager.getInstance().getGenreDetailAlbumsSortOrder(), SortManager.getInstance().getGenreDetailAlbumsAscending());
-        DetailSortHelper.updateSongSortMenuItems(toolbar, SortManager.getInstance().getGenreDetailSongsSortOrder(), SortManager.getInstance().getGenreDetailSongsAscending());
+        AlbumSortHelper.updateAlbumSortMenuItems(toolbar.getMenu(), SortManager.getInstance().getGenreDetailAlbumsSortOrder(), SortManager.getInstance().getGenreDetailAlbumsAscending());
+        SongSortHelper.updateSongSortMenuItems(toolbar.getMenu(), SortManager.getInstance().getGenreDetailSongsSortOrder(), SortManager.getInstance().getGenreDetailSongsAscending());
     }
 
     @Override
@@ -333,29 +330,29 @@ public class GenreDetailFragment extends BaseFragment implements
                 return true;
         }
 
-        Integer albumSortOrder = DetailSortHelper.handleAlbumMenuSortOrderClicks(item);
+        Integer albumSortOrder = AlbumSortHelper.handleAlbumDetailMenuSortOrderClicks(item);
         if (albumSortOrder != null) {
             SortManager.getInstance().setGenreDetailAlbumsSortOrder(albumSortOrder);
             presenter.loadData();
         }
-        Boolean albumsAsc = DetailSortHelper.handleAlbumMenuSortOrderAscClicks(item);
+        Boolean albumsAsc = AlbumSortHelper.handleAlbumDetailMenuSortOrderAscClicks(item);
         if (albumsAsc != null) {
             SortManager.getInstance().setGenreDetailAlbumsAscending(albumsAsc);
             presenter.loadData();
         }
-        Integer songSortOrder = DetailSortHelper.handleSongMenuSortOrderClicks(item);
+        Integer songSortOrder = SongSortHelper.handleSongMenuSortOrderClicks(item);
         if (songSortOrder != null) {
             SortManager.getInstance().setGenreDetailSongsSortOrder(songSortOrder);
             presenter.loadData();
         }
-        Boolean songsAsc = DetailSortHelper.handleSongMenuSortOrderAscClicks(item);
+        Boolean songsAsc = SongSortHelper.handleSongDetailMenuSortOrderAscClicks(item);
         if (songsAsc != null) {
             SortManager.getInstance().setGenreDetailSongsAscending(songsAsc);
             presenter.loadData();
         }
 
-        DetailSortHelper.updateAlbumSortMenuItems(toolbar, SortManager.getInstance().getGenreDetailAlbumsSortOrder(), SortManager.getInstance().getGenreDetailAlbumsAscending());
-        DetailSortHelper.updateSongSortMenuItems(toolbar, SortManager.getInstance().getGenreDetailSongsSortOrder(), SortManager.getInstance().getGenreDetailSongsAscending());
+        AlbumSortHelper.updateAlbumSortMenuItems(toolbar.getMenu(), SortManager.getInstance().getGenreDetailAlbumsSortOrder(), SortManager.getInstance().getGenreDetailAlbumsAscending());
+        SongSortHelper.updateSongSortMenuItems(toolbar.getMenu(), SortManager.getInstance().getGenreDetailSongsSortOrder(), SortManager.getInstance().getGenreDetailSongsAscending());
 
         return super.onOptionsItemSelected(item);
     }
@@ -506,7 +503,6 @@ public class GenreDetailFragment extends BaseFragment implements
         });
     }
 
-
     @Override
     public ContextualToolbar getContextualToolbar() {
         return contextualToolbar;
@@ -524,7 +520,8 @@ public class GenreDetailFragment extends BaseFragment implements
             SubMenu sub = contextualToolbar.getMenu().findItem(R.id.addToPlaylist).getSubMenu();
             disposables.add(PlaylistUtils.createUpdatingPlaylistMenu(sub).subscribe());
 
-            contextualToolbar.setOnMenuItemClickListener(SongMenuUtils.getSongMenuClickListener(getContext(), Single.defer(() -> Operators.reduceSongSingles(contextualToolbarHelper.getItems())), songMenuFragmentHelper.getSongMenuCallbacks()));
+            contextualToolbar.setOnMenuItemClickListener(SongMenuUtils.getSongMenuClickListener(getContext(), Single.defer(() -> Operators.reduceSongSingles(contextualToolbarHelper.getItems())),
+                    songMenuFragmentHelper.getSongMenuCallbacks()));
 
             contextualToolbarHelper = new ContextualToolbarHelper<Single<List<Song>>>(contextualToolbar, new ContextualToolbarHelper.Callback() {
 
@@ -575,7 +572,6 @@ public class GenreDetailFragment extends BaseFragment implements
         return "GenreDetailFragment";
     }
 
-
     private SharedElementCallback enterSharedElementCallback = new SharedElementCallback() {
         @Override
         public void onSharedElementStart(List<String> sharedElementNames, List<View> sharedElements, List<View> sharedElementSnapshots) {
@@ -586,7 +582,6 @@ public class GenreDetailFragment extends BaseFragment implements
             }
         }
     };
-
 
     public SongView.ClickListener songClickListener = new SongView.ClickListener() {
         @Override
@@ -656,7 +651,6 @@ public class GenreDetailFragment extends BaseFragment implements
 
         getNavigationController().pushViewController(fragment, "DetailFragment", transitions);
     }
-
 
     // GenreDetailView implementation
 

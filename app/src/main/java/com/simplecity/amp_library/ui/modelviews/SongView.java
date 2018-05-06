@@ -7,7 +7,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
-
+import butterknife.BindView;
+import butterknife.ButterKnife;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.RequestManager;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
@@ -19,15 +20,11 @@ import com.simplecity.amp_library.ui.views.NonScrollImageButton;
 import com.simplecity.amp_library.ui.views.PlayCountView;
 import com.simplecity.amp_library.utils.PlaceholderProvider;
 import com.simplecity.amp_library.utils.SettingsManager;
-import com.simplecity.amp_library.utils.SortManager;
 import com.simplecity.amp_library.utils.StringUtils;
+import com.simplecity.amp_library.utils.sorting.SortManager;
 import com.simplecityapps.recycler_adapter.recyclerview.BaseViewHolder;
-
 import java.util.Arrays;
 import java.util.List;
-
-import butterknife.BindView;
-import butterknife.ButterKnife;
 
 public class SongView extends BaseSelectableViewModel<SongView.ViewHolder> implements
         SectionedView,
@@ -86,6 +83,10 @@ public class SongView extends BaseSelectableViewModel<SongView.ViewHolder> imple
 
     public void showAlbumArt(boolean showAlbumArt) {
         this.showAlbumArt = showAlbumArt;
+    }
+
+    public boolean getShowAlbumArt() {
+        return showAlbumArt;
     }
 
     public void showPlayCount(boolean showPlayCount) {
@@ -329,19 +330,23 @@ public class SongView extends BaseSelectableViewModel<SongView.ViewHolder> imple
         @BindView(R.id.line_three)
         TextView lineThree;
 
-        @Nullable @BindView(R.id.trackNumber)
+        @Nullable
+        @BindView(R.id.trackNumber)
         TextView trackNumber;
 
-        @Nullable @BindView(R.id.play_count)
+        @Nullable
+        @BindView(R.id.play_count)
         PlayCountView playCount;
 
         @BindView(R.id.btn_overflow)
         public NonScrollImageButton overflowButton;
 
-        @Nullable @BindView(R.id.drag_handle)
+        @Nullable
+        @BindView(R.id.drag_handle)
         ImageView dragHandle;
 
-        @Nullable @BindView(R.id.image)
+        @Nullable
+        @BindView(R.id.image)
         ImageView artwork;
 
         ViewHolder(View itemView) {

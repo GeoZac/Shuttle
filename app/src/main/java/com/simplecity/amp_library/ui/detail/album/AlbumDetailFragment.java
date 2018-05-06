@@ -24,7 +24,10 @@ import android.view.ViewGroup;
 import android.view.animation.AnimationUtils;
 import android.widget.ImageView;
 import android.widget.Toast;
-
+import butterknife.BindView;
+import butterknife.ButterKnife;
+import butterknife.OnClick;
+import butterknife.Unbinder;
 import com.afollestad.aesthetic.Aesthetic;
 import com.annimon.stream.Stream;
 import com.bumptech.glide.Glide;
@@ -37,7 +40,6 @@ import com.simplecity.amp_library.model.Album;
 import com.simplecity.amp_library.model.ArtworkProvider;
 import com.simplecity.amp_library.model.Song;
 import com.simplecity.amp_library.tagger.TaggerDialog;
-import com.simplecity.amp_library.ui.detail.DetailSortHelper;
 import com.simplecity.amp_library.ui.dialog.BiographyDialog;
 import com.simplecity.amp_library.ui.dialog.DeleteDialog;
 import com.simplecity.amp_library.ui.dialog.UpgradeDialog;
@@ -60,27 +62,23 @@ import com.simplecity.amp_library.utils.PlaceholderProvider;
 import com.simplecity.amp_library.utils.PlaylistUtils;
 import com.simplecity.amp_library.utils.ResourceUtils;
 import com.simplecity.amp_library.utils.ShuttleUtils;
-import com.simplecity.amp_library.utils.SortManager;
 import com.simplecity.amp_library.utils.StringUtils;
 import com.simplecity.amp_library.utils.TypefaceManager;
 import com.simplecity.amp_library.utils.menu.song.SongMenuFragmentHelper;
 import com.simplecity.amp_library.utils.menu.song.SongMenuUtils;
+import com.simplecity.amp_library.utils.sorting.AlbumSortHelper;
+import com.simplecity.amp_library.utils.sorting.SongSortHelper;
+import com.simplecity.amp_library.utils.sorting.SortManager;
 import com.simplecityapps.recycler_adapter.adapter.CompletionListUpdateCallbackAdapter;
 import com.simplecityapps.recycler_adapter.adapter.ViewModelAdapter;
 import com.simplecityapps.recycler_adapter.model.ViewModel;
 import com.simplecityapps.recycler_adapter.recyclerview.RecyclerListener;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
-import butterknife.BindView;
-import butterknife.ButterKnife;
-import butterknife.OnClick;
-import butterknife.Unbinder;
 import io.reactivex.Single;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 import static com.afollestad.aesthetic.Rx.distinctToMainThread;
 
@@ -294,7 +292,7 @@ public class AlbumDetailFragment extends BaseFragment implements
         toolbar.getMenu().findItem(R.id.info).setVisible(true);
         toolbar.getMenu().findItem(R.id.artwork).setVisible(true);
 
-        DetailSortHelper.updateAlbumSortMenuItems(toolbar, SortManager.getInstance().getArtistDetailAlbumsSortOrder(), SortManager.getInstance().getArtistDetailAlbumsAscending());
+        AlbumSortHelper.updateAlbumSortMenuItems(toolbar.getMenu(), SortManager.getInstance().getArtistDetailAlbumsSortOrder(), SortManager.getInstance().getArtistDetailAlbumsAscending());
     }
 
     @Override
@@ -326,18 +324,18 @@ public class AlbumDetailFragment extends BaseFragment implements
                 return true;
         }
 
-        Integer songSortOder = DetailSortHelper.handleSongMenuSortOrderClicks(item);
+        Integer songSortOder = SongSortHelper.handleSongMenuSortOrderClicks(item);
         if (songSortOder != null) {
             SortManager.getInstance().setAlbumDetailSongsSortOrder(songSortOder);
             presenter.loadData();
         }
-        Boolean songsAsc = DetailSortHelper.handleSongMenuSortOrderAscClicks(item);
+        Boolean songsAsc = SongSortHelper.handleSongDetailMenuSortOrderAscClicks(item);
         if (songsAsc != null) {
             SortManager.getInstance().setAlbumDetailSongsAscending(songsAsc);
             presenter.loadData();
         }
 
-        DetailSortHelper.updateAlbumSortMenuItems(toolbar, SortManager.getInstance().getArtistDetailAlbumsSortOrder(), SortManager.getInstance().getArtistDetailAlbumsAscending());
+        AlbumSortHelper.updateAlbumSortMenuItems(toolbar.getMenu(), SortManager.getInstance().getArtistDetailAlbumsSortOrder(), SortManager.getInstance().getArtistDetailAlbumsAscending());
 
         return super.onOptionsItemSelected(item);
     }
@@ -486,7 +484,12 @@ public class AlbumDetailFragment extends BaseFragment implements
             SubMenu sub = contextualToolbar.getMenu().findItem(R.id.addToPlaylist).getSubMenu();
             disposables.add(PlaylistUtils.createUpdatingPlaylistMenu(sub).subscribe());
 
-            contextualToolbar.setOnMenuItemClickListener(SongMenuUtils.getSongMenuClickListener(getContext(), Single.defer(() -> Operators.reduceSongSingles(contextualToolbarHelper.getItems())), songMenuFragmentHelper.getSongMenuCallbacks()));
+            contextualToolbar.setOnMenuItemClickListener(
+                    SongMenuUtils.getSongMenuClickListener(
+                            getContext(),
+                            Single.defer(() -> Operators.reduceSongSingles(contextualToolbarHelper.getItems())),
+                            songMenuFragmentHelper.getSongMenuCallbacks())
+            );
 
             contextualToolbarHelper = new ContextualToolbarHelper<Single<List<Song>>>(contextualToolbar, new ContextualToolbarHelper.Callback() {
 
@@ -529,12 +532,10 @@ public class AlbumDetailFragment extends BaseFragment implements
         }
     }
 
-
     @Override
     public String screenName() {
         return "AlbumDetailFragment";
     }
-
 
     private SharedElementCallback enterSharedElementCallback = new SharedElementCallback() {
         @Override
@@ -573,7 +574,6 @@ public class AlbumDetailFragment extends BaseFragment implements
 
         }
     };
-
 
     // AlbumDetailView implementation
 
@@ -618,5 +618,4 @@ public class AlbumDetailFragment extends BaseFragment implements
             contextualToolbarHelper.finish();
         }
     }
-
 }

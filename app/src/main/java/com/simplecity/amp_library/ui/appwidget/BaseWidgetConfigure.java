@@ -31,12 +31,12 @@ import android.widget.ImageView;
 import android.widget.RemoteViews;
 import android.widget.SeekBar;
 import android.widget.TextView;
-
 import com.afollestad.aesthetic.Aesthetic;
 import com.afollestad.materialdialogs.color.ColorChooserDialog;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.simplecity.amp_library.R;
+import com.simplecity.amp_library.model.Song;
 import com.simplecity.amp_library.playback.constants.MediaButtonCommand;
 import com.simplecity.amp_library.playback.constants.ServiceCommand;
 import com.simplecity.amp_library.ui.activities.BaseActivity;
@@ -173,7 +173,6 @@ public abstract class BaseWidgetConfigure extends BaseActivity implements
         if (compoundButton.getId() == R.id.checkBox1) {
             showAlbumArt = checked;
             prefs.edit().putBoolean(BaseWidgetProvider.ARG_WIDGET_SHOW_ARTWORK + appWidgetId, showAlbumArt).apply();
-
         }
         if (compoundButton.getId() == R.id.checkBox2) {
             invertIcons = checked;
@@ -200,7 +199,7 @@ public abstract class BaseWidgetConfigure extends BaseActivity implements
             // wrap around with an immediate update.
             Intent updateIntent = new Intent(ServiceCommand.SERVICE_COMMAND);
             updateIntent.putExtra(MediaButtonCommand.CMD_NAME, getUpdateCommandString());
-            updateIntent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, new int[]{appWidgetId});
+            updateIntent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, new int[] { appWidgetId });
             updateIntent.addFlags(Intent.FLAG_RECEIVER_REGISTERED_ONLY);
             sendBroadcast(updateIntent);
 
@@ -330,9 +329,16 @@ public abstract class BaseWidgetConfigure extends BaseActivity implements
                 TextView text1 = widgetLayout.findViewById(R.id.text1);
                 TextView text2 = widgetLayout.findViewById(R.id.text2);
                 TextView text3 = widgetLayout.findViewById(R.id.text3);
-                String trackName = MusicUtils.getSong().name;
-                String artistName = MusicUtils.getSong().albumArtistName;
-                final String albumName = MusicUtils.getSong().albumName;
+                Song song = MusicUtils.getSong();
+
+                String trackName = null;
+                String artistName = null;
+                String albumName = null;
+                if (song != null) {
+                    trackName = song.name;
+                    artistName = song.albumArtistName;
+                    albumName = song.albumName;
+                }
                 if (trackName != null && text1 != null) {
                     text1.setText(trackName);
                     text1.setTextColor(textColor);
@@ -429,5 +435,4 @@ public abstract class BaseWidgetConfigure extends BaseActivity implements
     public String key() {
         return "widget_activity";
     }
-
 }

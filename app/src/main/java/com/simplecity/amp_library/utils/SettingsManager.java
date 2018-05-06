@@ -1,11 +1,12 @@
 package com.simplecity.amp_library.utils;
 
 import android.content.res.Resources;
-
+import android.support.annotation.Nullable;
 import com.simplecity.amp_library.BuildConfig;
 import com.simplecity.amp_library.R;
 import com.simplecity.amp_library.model.CategoryItem;
 import com.simplecity.amp_library.ui.adapters.ViewType;
+import com.simplecity.amp_library.utils.sorting.SortManager;
 
 public class SettingsManager extends BaseSettingsManager {
 
@@ -59,6 +60,9 @@ public class SettingsManager extends BaseSettingsManager {
 
     // Whether the 'rate' snackbar has been seen during this session
     public boolean hasSeenRateSnackbar = false;
+
+    // Whether to display artwork in the songs list
+    //public static String KEY_SHOW_
 
     private SettingsManager() {
 
@@ -166,13 +170,13 @@ public class SettingsManager extends BaseSettingsManager {
         return getBool("audiofx.global.enable", false);
     }
 
-
     private static final String DOCUMENT_TREE_URI = "document_tree_uri";
 
     public void setDocumentTreeUri(String documentTreeUri) {
         setString(DOCUMENT_TREE_URI, documentTreeUri);
     }
 
+    @Nullable
     public String getDocumentTreeUri() {
         return getString(DOCUMENT_TREE_URI);
     }
@@ -314,6 +318,7 @@ public class SettingsManager extends BaseSettingsManager {
     private static final String KEY_DOWNLOAD_AUTOMATICALLY = "pref_download_artwork_auto";
     private static final String KEY_USE_GMAIL_PLACEHOLDERS = "pref_placeholders";
     private static final String KEY_QUEUE_ARTWORK = "pref_artwork_queue";
+    private static final String KEY_SONG_LIST_ARTWORK = "pref_artwork_song_list";
     private static final String KEY_CROP_ARTWORK = "pref_crop_artwork";
     public static final String KEY_IGNORE_MEDIASTORE_ART = "pref_ignore_mediastore_artwork";
     public static final String KEY_IGNORE_EMBEDDED_ARTWORK = "pref_ignore_embedded_artwork";
@@ -398,7 +403,6 @@ public class SettingsManager extends BaseSettingsManager {
         return getBool(KEY_SEARCH_ALBUMS, true);
     }
 
-
     // Changelog
 
     private static final String KEY_VERSION_CODE = "version_code";
@@ -444,14 +448,12 @@ public class SettingsManager extends BaseSettingsManager {
         setInt(KEY_DEFAULT_PAGE, type);
     }
 
-
     // Legacy Upgrade Preference
     private static final String KEY_UPGRADED = "pref_theme_gold";
 
     public boolean getIsLegacyUpgraded() {
         return getBool(KEY_UPGRADED, false);
     }
-
 
     // Recently added
 
@@ -466,4 +468,14 @@ public class SettingsManager extends BaseSettingsManager {
     }
 
 
+
+    // Song List
+
+    public boolean showArtworkInSongList() {
+        return getBool(KEY_SONG_LIST_ARTWORK, true);
+    }
+
+    public void setShowArtworkInSongList(boolean showArtworkInSongList){
+        setBool(KEY_SONG_LIST_ARTWORK, showArtworkInSongList);
+    }
 }

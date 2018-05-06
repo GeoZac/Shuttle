@@ -16,7 +16,6 @@ import android.view.SubMenu;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
-
 import com.annimon.stream.Stream;
 import com.bumptech.glide.RequestManager;
 import com.simplecity.amp_library.R;
@@ -40,24 +39,21 @@ import com.simplecity.amp_library.utils.Operators;
 import com.simplecity.amp_library.utils.PermissionUtils;
 import com.simplecity.amp_library.utils.PlaylistUtils;
 import com.simplecity.amp_library.utils.SettingsManager;
-import com.simplecity.amp_library.utils.SortManager;
+import com.simplecity.amp_library.utils.sorting.SortManager;
 import com.simplecity.amp_library.utils.menu.album.AlbumMenuFragmentHelper;
 import com.simplecity.amp_library.utils.menu.album.AlbumMenuUtils;
 import com.simplecityapps.recycler_adapter.model.ViewModel;
 import com.simplecityapps.recycler_adapter.recyclerview.RecyclerListener;
 import com.simplecityapps.recycler_adapter.recyclerview.SpanSizeLookup;
 import com.simplecityapps.recyclerview_fastscroll.views.FastScrollRecyclerView;
-
-import java.util.Collections;
-import java.util.concurrent.TimeUnit;
-
-import javax.inject.Inject;
-
 import io.reactivex.Observable;
 import io.reactivex.Single;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
+import java.util.Collections;
+import java.util.concurrent.TimeUnit;
+import javax.inject.Inject;
 
 public class AlbumFragment extends BaseFragment implements
         AlbumView.ClickListener,
@@ -274,7 +270,7 @@ public class AlbumFragment extends BaseFragment implements
 
         switch (sortOrder) {
             case SortManager.AlbumSort.DEFAULT:
-                menu.findItem(R.id.sort_default).setChecked(true);
+                menu.findItem(R.id.sort_album_default).setChecked(true);
                 break;
             case SortManager.AlbumSort.NAME:
                 menu.findItem(R.id.sort_album_name).setChecked(true);
@@ -287,7 +283,7 @@ public class AlbumFragment extends BaseFragment implements
                 break;
         }
 
-        menu.findItem(R.id.sort_ascending).setChecked(SortManager.getInstance().getAlbumsAscending());
+        menu.findItem(R.id.sort_album_ascending).setChecked(SortManager.getInstance().getAlbumsAscending());
 
         int displayType = SettingsManager.getInstance().getAlbumDisplayType();
         switch (displayType) {
@@ -322,7 +318,7 @@ public class AlbumFragment extends BaseFragment implements
     public boolean onOptionsItemSelected(MenuItem item) {
 
         switch (item.getItemId()) {
-            case R.id.sort_default:
+            case R.id.sort_album_default:
                 SortManager.getInstance().setAlbumsSortOrder(SortManager.AlbumSort.DEFAULT);
                 sortOrderChanged = true;
                 refreshAdapterItems(true);
@@ -342,7 +338,7 @@ public class AlbumFragment extends BaseFragment implements
                 sortOrderChanged = true;
                 refreshAdapterItems(true);
                 break;
-            case R.id.sort_ascending:
+            case R.id.sort_album_ascending:
                 SortManager.getInstance().setAlbumsAscending(!item.isChecked());
                 sortOrderChanged = true;
                 refreshAdapterItems(true);
@@ -462,7 +458,12 @@ public class AlbumFragment extends BaseFragment implements
             }
             playlistMenuDisposable = PlaylistUtils.createUpdatingPlaylistMenu(sub).subscribe();
 
-            contextualToolbar.setOnMenuItemClickListener(AlbumMenuUtils.getAlbumMenuClickListener(getContext(), Single.defer(() -> Single.just(contextualToolbarHelper.getItems())), albumMenuFragmentHelper.getCallbacks()));
+            contextualToolbar.setOnMenuItemClickListener(
+                    AlbumMenuUtils.getAlbumMenuClickListener(
+                            getContext(),
+                            Single.defer(() -> Single.just(contextualToolbarHelper.getItems())),
+                            albumMenuFragmentHelper.getCallbacks())
+            );
 
             contextualToolbarHelper = new ContextualToolbarHelper<>(contextualToolbar, new ContextualToolbarHelper.Callback() {
 
@@ -478,7 +479,6 @@ public class AlbumFragment extends BaseFragment implements
             });
         }
     }
-
 
     @Override
     protected String screenName() {

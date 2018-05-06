@@ -14,7 +14,6 @@ import android.view.MenuItem;
 import android.view.SubMenu;
 import android.view.View;
 import android.view.ViewGroup;
-
 import com.annimon.stream.Stream;
 import com.bumptech.glide.RequestManager;
 import com.simplecity.amp_library.R;
@@ -34,24 +33,21 @@ import com.simplecity.amp_library.utils.MusicUtils;
 import com.simplecity.amp_library.utils.PermissionUtils;
 import com.simplecity.amp_library.utils.PlaylistUtils;
 import com.simplecity.amp_library.utils.SettingsManager;
-import com.simplecity.amp_library.utils.SortManager;
+import com.simplecity.amp_library.utils.sorting.SortManager;
 import com.simplecity.amp_library.utils.menu.albumartist.AlbumArtistMenuFragmentHelper;
 import com.simplecity.amp_library.utils.menu.albumartist.AlbumArtistMenuUtils;
 import com.simplecityapps.recycler_adapter.model.ViewModel;
 import com.simplecityapps.recycler_adapter.recyclerview.RecyclerListener;
 import com.simplecityapps.recycler_adapter.recyclerview.SpanSizeLookup;
 import com.simplecityapps.recyclerview_fastscroll.views.FastScrollRecyclerView;
-
-import java.util.Collections;
-import java.util.concurrent.TimeUnit;
-
-import javax.inject.Inject;
-
 import io.reactivex.Observable;
 import io.reactivex.Single;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
+import java.util.Collections;
+import java.util.concurrent.TimeUnit;
+import javax.inject.Inject;
 
 public class AlbumArtistFragment extends BaseFragment implements
         MusicUtils.Defs,
@@ -259,7 +255,7 @@ public class AlbumArtistFragment extends BaseFragment implements
 
         switch (sortOrder) {
             case SortManager.ArtistSort.DEFAULT:
-                MenuItem sortDefault = menu.findItem(R.id.sort_default);
+                MenuItem sortDefault = menu.findItem(R.id.sort_artist_default);
                 if (sortDefault != null) {
                     sortDefault.setChecked(true);
                 }
@@ -272,7 +268,7 @@ public class AlbumArtistFragment extends BaseFragment implements
                 break;
         }
 
-        MenuItem sortAscending = menu.findItem(R.id.sort_ascending);
+        MenuItem sortAscending = menu.findItem(R.id.sort_artist_ascending);
         if (sortAscending != null) {
             sortAscending.setChecked(SortManager.getInstance().getArtistsAscending());
         }
@@ -322,7 +318,7 @@ public class AlbumArtistFragment extends BaseFragment implements
     public boolean onOptionsItemSelected(MenuItem item) {
 
         switch (item.getItemId()) {
-            case R.id.sort_default:
+            case R.id.sort_artist_default:
                 SortManager.getInstance().setArtistsSortOrder(SortManager.ArtistSort.DEFAULT);
                 sortOrderChanged = true;
                 refreshAdapterItems(true);
@@ -332,7 +328,7 @@ public class AlbumArtistFragment extends BaseFragment implements
                 sortOrderChanged = true;
                 refreshAdapterItems(true);
                 break;
-            case R.id.sort_ascending:
+            case R.id.sort_artist_ascending:
                 SortManager.getInstance().setArtistsAscending(!item.isChecked());
                 sortOrderChanged = true;
                 refreshAdapterItems(true);
@@ -441,7 +437,13 @@ public class AlbumArtistFragment extends BaseFragment implements
             }
             playlistMenuDisposable = PlaylistUtils.createUpdatingPlaylistMenu(sub).subscribe();
 
-            contextualToolbar.setOnMenuItemClickListener(AlbumArtistMenuUtils.getAlbumArtistMenuClickListener(getContext(), Single.defer(() -> Single.just(contextualToolbarHelper.getItems())), albumArtistMenuFragmentHelper.getCallbacks()));
+            contextualToolbar.setOnMenuItemClickListener(
+                    AlbumArtistMenuUtils.getAlbumArtistMenuClickListener(
+                            getContext(),
+                            Single.defer(() -> Single.just(contextualToolbarHelper.getItems())),
+                            albumArtistMenuFragmentHelper.getCallbacks()
+                    ));
+
             contextualToolbarHelper = new ContextualToolbarHelper<>(contextualToolbar, new ContextualToolbarHelper.Callback() {
                 @Override
                 public void notifyItemChanged(int position, SelectableViewModel viewModel) {
