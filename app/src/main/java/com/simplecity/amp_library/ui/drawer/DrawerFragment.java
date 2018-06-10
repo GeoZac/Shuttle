@@ -29,6 +29,7 @@ import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.simplecity.amp_library.R;
 import com.simplecity.amp_library.ShuttleApplication;
 import com.simplecity.amp_library.dagger.module.ActivityModule;
+import com.simplecity.amp_library.dagger.module.FragmentModule;
 import com.simplecity.amp_library.model.Playlist;
 import com.simplecity.amp_library.model.Song;
 import com.simplecity.amp_library.ui.fragments.BaseFragment;
@@ -36,10 +37,9 @@ import com.simplecity.amp_library.ui.presenters.PlayerPresenter;
 import com.simplecity.amp_library.ui.views.CircleImageView;
 import com.simplecity.amp_library.ui.views.PlayerViewAdapter;
 import com.simplecity.amp_library.utils.LogUtils;
-import com.simplecity.amp_library.utils.MusicUtils;
 import com.simplecity.amp_library.utils.PlaceholderProvider;
 import com.simplecity.amp_library.utils.SleepTimer;
-import com.simplecity.amp_library.utils.menu.playlist.PlaylistMenuFragmentHelper;
+import com.simplecity.amp_library.utils.menu.playlist.PlaylistMenuCallbacksAdapter;
 import com.simplecity.amp_library.utils.menu.playlist.PlaylistMenuUtils;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
@@ -101,7 +101,7 @@ public class DrawerFragment extends BaseFragment implements
 
     private List<Parent<DrawerChild>> drawerParents;
 
-    private PlaylistMenuFragmentHelper playlistMenuFragmentHelper = new PlaylistMenuFragmentHelper(this, disposables, null);
+    private PlaylistMenuCallbacksAdapter playlistMenuCallbacksAdapter = new PlaylistMenuCallbacksAdapter(this, disposables);
 
     public DrawerFragment() {
     }
@@ -112,6 +112,7 @@ public class DrawerFragment extends BaseFragment implements
 
         ShuttleApplication.getInstance().getAppComponent()
                 .plus(new ActivityModule(getActivity()))
+                .plus(new FragmentModule(this))
                 .inject(this);
 
         if (savedInstanceState != null) {
@@ -174,7 +175,7 @@ public class DrawerFragment extends BaseFragment implements
                 .compose(Rx.distinctToMainThread())
                 .subscribe(color -> {
                     backgroundPlaceholder.setColorFilter(color, PorterDuff.Mode.MULTIPLY);
-                    if (MusicUtils.getSong() == null) {
+                    if (mediaManager.getSong() == null) {
                         backgroundImage.setImageDrawable(backgroundPlaceholder);
                     }
                 }));
@@ -264,8 +265,8 @@ public class DrawerFragment extends BaseFragment implements
                         @Override
                         public void onOverflowClick(View view, Playlist playlist) {
                             PopupMenu popupMenu = new PopupMenu(view.getContext(), view);
-                            PlaylistMenuUtils.setupPlaylistMenu(popupMenu, playlist);
-                            popupMenu.setOnMenuItemClickListener(PlaylistMenuUtils.getPlaylistPopupMenuClickListener(playlist, playlistMenuFragmentHelper.getCallbacks()));
+                            PlaylistMenuUtils.INSTANCE.setupPlaylistMenu(popupMenu, playlist);
+                            popupMenu.setOnMenuItemClickListener(PlaylistMenuUtils.INSTANCE.getPlaylistPopupMenuClickListener(mediaManager, playlist, playlistMenuCallbacksAdapter));
                             popupMenu.show();
                         }
                     });

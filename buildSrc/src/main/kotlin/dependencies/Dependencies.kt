@@ -80,7 +80,7 @@ object Dependencies {
     object Plugins {
 
         object Versions {
-            const val androidGradlePlugin = "3.2.0-alpha04"
+            const val androidGradlePlugin = "3.2.0-alpha16"
             const val kotlin = "1.2.30"
             const val dexcountGradlePlugin = "0.8.2"
             const val fabricGradlePlugin = "1.+"
@@ -251,6 +251,8 @@ object Dependencies {
         const val androidApplication = "com.android.application"
         const val androidLibrary = "com.android.library"
         const val kotlin = "kotlin-android"
+        const val kotlinAndroidExtensions = "kotlin-android-extensions"
+        const val kapt = "kotlin-kapt"
         const val dexCount = "com.getkeepsafe.dexcount"
         const val fabric = "io.fabric"
         const val playPublisher = "com.github.triplet.play"

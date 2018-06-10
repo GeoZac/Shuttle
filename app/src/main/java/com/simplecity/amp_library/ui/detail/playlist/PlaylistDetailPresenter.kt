@@ -3,10 +3,10 @@ package com.simplecity.amp_library.ui.detail.playlist
 import com.simplecity.amp_library.model.Album
 import com.simplecity.amp_library.model.Playlist
 import com.simplecity.amp_library.model.Song
+import com.simplecity.amp_library.playback.MediaManager
 import com.simplecity.amp_library.ui.presenters.Presenter
 import com.simplecity.amp_library.utils.ComparisonUtils
 import com.simplecity.amp_library.utils.LogUtils
-import com.simplecity.amp_library.utils.MusicUtils
 import com.simplecity.amp_library.utils.Operators
 import com.simplecity.amp_library.utils.PermissionUtils
 import com.simplecity.amp_library.utils.sorting.SortManager
@@ -17,7 +17,7 @@ import io.reactivex.schedulers.Schedulers
 import java.util.Random
 import java.util.concurrent.TimeUnit
 
-class PlaylistDetailPresenter constructor(private val playlist: Playlist) : Presenter<PlaylistDetailView>() {
+class PlaylistDetailPresenter constructor(private val mediaManager: MediaManager, private val playlist: Playlist) : Presenter<PlaylistDetailView>() {
 
     private var songs: MutableList<Song> = mutableListOf()
 
@@ -40,8 +40,10 @@ class PlaylistDetailPresenter constructor(private val playlist: Playlist) : Pres
         }
 
         if (songSort == SortManager.SongSort.DETAIL_DEFAULT) {
-            if (playlist.type == Playlist.Type.MOST_PLAYED) {
-                songs.sortWith(kotlin.Comparator { a, b -> ComparisonUtils.compareInt(b.playCount, a.playCount) })
+            when {
+                playlist.type == Playlist.Type.MOST_PLAYED -> songs.sortWith(kotlin.Comparator { a, b -> ComparisonUtils.compareInt(b.playCount, a.playCount) })
+                playlist.type == Playlist.Type.RECENTLY_ADDED -> songs.sortWith(kotlin.Comparator { a, b -> ComparisonUtils.compareInt(b.dateAdded, a.dateAdded) })
+                playlist.type == Playlist.Type.RECENTLY_PLAYED -> songs.sortWith(kotlin.Comparator { a, b -> ComparisonUtils.compareLong(b.lastPlayed, a.lastPlayed) })
             }
             if (playlist.canEdit) {
                 songs.sortWith(kotlin.Comparator { a, b -> ComparisonUtils.compareLong(a.playlistSongPlayOrder, b.playlistSongPlayOrder) })
@@ -66,17 +68,17 @@ class PlaylistDetailPresenter constructor(private val playlist: Playlist) : Pres
     }
 
     private fun startSlideShow() {
-        val a: Observable<List<Album>> = playlist.songsObservable
+        val albumsObservable: Observable<List<Album>> = playlist.songsObservable
             .map { songs -> Operators.songsToAlbums(songs) }
 
-        val b: Observable<Long> = io.reactivex.Observable.interval(8, TimeUnit.SECONDS)
+        val timer: Observable<Long> = io.reactivex.Observable.interval(8, TimeUnit.SECONDS)
             // Load an image straight away
             .startWith(0L)
             // If we have a 'current slideshowAlbum' then we're coming back from onResume. Don't load a new one immediately.
             .delay(if (currentSlideShowAlbum == null) 0L else 8L, TimeUnit.SECONDS)
 
         addDisposable(Observable
-            .combineLatest(a, b, BiFunction { albums: List<Album>, aLong: Long -> albums })
+            .combineLatest(albumsObservable, timer, BiFunction { albums: List<Album>, _: Long -> albums })
             .map { albums ->
                 if (albums.isEmpty()) {
                     currentSlideShowAlbum
@@ -86,15 +88,15 @@ class PlaylistDetailPresenter constructor(private val playlist: Playlist) : Pres
             }
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
-            .doOnError { error ->
-                LogUtils.logException(TAG, "startSlideShow threw error", error)
-            }
-            .subscribe { newAlbum ->
+            .subscribe({ newAlbum ->
                 newAlbum?.let {
                     view?.fadeInSlideShowAlbum(currentSlideShowAlbum, newAlbum)
                     currentSlideShowAlbum = newAlbum
                 }
+            }, { error ->
+                LogUtils.logException(TAG, "startSlideShow threw error", error)
             })
+        )
     }
 
     fun closeContextualToolbar() {
@@ -102,25 +104,25 @@ class PlaylistDetailPresenter constructor(private val playlist: Playlist) : Pres
     }
 
     fun fabClicked() {
-        MusicUtils.shuffleAll(songs) { message ->
+        mediaManager.shuffleAll(songs) { message ->
             view?.showToast(message)
         }
     }
 
     fun playAll() {
-        MusicUtils.playAll(songs, 0, true) { message ->
+        mediaManager.playAll(songs, 0, true) { message ->
             view?.showToast(message)
         }
     }
 
     fun playNext() {
-        MusicUtils.playNext(songs) { message ->
+        mediaManager.playNext(songs) { message ->
             view?.showToast(message)
         }
     }
 
     fun addToQueue() {
-        MusicUtils.addToQueue(songs) { message ->
+        mediaManager.addToQueue(songs) { message ->
             view?.showToast(message)
         }
     }
@@ -130,12 +132,12 @@ class PlaylistDetailPresenter constructor(private val playlist: Playlist) : Pres
     }
 
     fun songClicked(song: Song) {
-        MusicUtils.playAll(songs, songs.indexOf(song), true) { message ->
+        mediaManager.playAll(songs, songs.indexOf(song), true) { message ->
             view?.showToast(message)
         }
     }
 
     companion object {
-        const val TAG = "PlaylistDetailFragment"
+        const val TAG = "PlaylistDetailPresenter"
     }
 }

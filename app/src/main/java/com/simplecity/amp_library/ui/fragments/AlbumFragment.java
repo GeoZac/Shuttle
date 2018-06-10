@@ -20,8 +20,10 @@ import com.annimon.stream.Stream;
 import com.bumptech.glide.RequestManager;
 import com.simplecity.amp_library.R;
 import com.simplecity.amp_library.ShuttleApplication;
+import com.simplecity.amp_library.dagger.module.ActivityModule;
 import com.simplecity.amp_library.dagger.module.FragmentModule;
 import com.simplecity.amp_library.model.Album;
+import com.simplecity.amp_library.model.Song;
 import com.simplecity.amp_library.playback.QueueManager;
 import com.simplecity.amp_library.ui.adapters.SectionedAdapter;
 import com.simplecity.amp_library.ui.adapters.ViewType;
@@ -34,14 +36,13 @@ import com.simplecity.amp_library.ui.views.ContextualToolbar;
 import com.simplecity.amp_library.utils.ContextualToolbarHelper;
 import com.simplecity.amp_library.utils.DataManager;
 import com.simplecity.amp_library.utils.LogUtils;
-import com.simplecity.amp_library.utils.MusicUtils;
 import com.simplecity.amp_library.utils.Operators;
 import com.simplecity.amp_library.utils.PermissionUtils;
 import com.simplecity.amp_library.utils.PlaylistUtils;
 import com.simplecity.amp_library.utils.SettingsManager;
-import com.simplecity.amp_library.utils.sorting.SortManager;
-import com.simplecity.amp_library.utils.menu.album.AlbumMenuFragmentHelper;
+import com.simplecity.amp_library.utils.menu.album.AlbumMenuCallbacksAdapter;
 import com.simplecity.amp_library.utils.menu.album.AlbumMenuUtils;
+import com.simplecity.amp_library.utils.sorting.SortManager;
 import com.simplecityapps.recycler_adapter.model.ViewModel;
 import com.simplecityapps.recycler_adapter.recyclerview.RecyclerListener;
 import com.simplecityapps.recycler_adapter.recyclerview.SpanSizeLookup;
@@ -52,8 +53,10 @@ import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
 import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 import javax.inject.Inject;
+import kotlin.Unit;
 
 public class AlbumFragment extends BaseFragment implements
         AlbumView.ClickListener,
@@ -98,7 +101,7 @@ public class AlbumFragment extends BaseFragment implements
 
     private CompositeDisposable menuDisposables = new CompositeDisposable();
 
-    private AlbumMenuFragmentHelper albumMenuFragmentHelper = new AlbumMenuFragmentHelper(this, menuDisposables);
+    private AlbumMenuCallbacksAdapter albumMenuCallbacksAdapter = new AlbumMenuCallbacksAdapter(this, menuDisposables);
 
     public AlbumFragment() {
 
@@ -127,6 +130,7 @@ public class AlbumFragment extends BaseFragment implements
         super.onCreate(savedInstanceState);
 
         ShuttleApplication.getInstance().getAppComponent()
+                .plus(new ActivityModule(getActivity()))
                 .plus(new FragmentModule(this))
                 .inject(this);
 
@@ -402,7 +406,7 @@ public class AlbumFragment extends BaseFragment implements
 
     @Override
     public void onAlbumClick(int position, AlbumView albumView, AlbumView.ViewHolder viewHolder) {
-        if (!contextualToolbarHelper.handleClick(position, albumView, albumView.album)) {
+        if (!contextualToolbarHelper.handleClick(albumView, albumView.album)) {
             if (albumClickListener != null) {
                 albumClickListener.onAlbumClicked(albumView.album, viewHolder.imageOne);
             }
@@ -411,7 +415,7 @@ public class AlbumFragment extends BaseFragment implements
 
     @Override
     public boolean onAlbumLongClick(int position, AlbumView albumView) {
-        return contextualToolbarHelper.handleLongClick(position, albumView, albumView.album);
+        return contextualToolbarHelper.handleLongClick(albumView, albumView.album);
     }
 
     @Override
@@ -420,19 +424,28 @@ public class AlbumFragment extends BaseFragment implements
         menu.inflate(R.menu.menu_album);
         SubMenu sub = menu.getMenu().findItem(R.id.addToPlaylist).getSubMenu();
         PlaylistUtils.createPlaylistMenu(sub);
-        menu.setOnMenuItemClickListener(AlbumMenuUtils.getAlbumMenuClickListener(getContext(), album, albumMenuFragmentHelper.getCallbacks()));
+        menu.setOnMenuItemClickListener(AlbumMenuUtils.INSTANCE.getAlbumMenuClickListener(getContext(), mediaManager, album, albumMenuCallbacksAdapter));
         menu.show();
     }
 
     @Override
     public void onShuffleItemClick() {
         // Note: For album-shuffle mode, we don't actually turn shuffle on.
-        MusicUtils.setShuffleMode(QueueManager.ShuffleMode.OFF);
-        MusicUtils.playAll(DataManager.getInstance()
+        mediaManager.setShuffleMode(QueueManager.ShuffleMode.OFF);
+
+        Single<List<Song>> aa = DataManager.getInstance()
+                .getSongsRelay()
+                .firstOrError()
+                .map(Operators::albumShuffleSongs);
+
+        mediaManager.playAll(DataManager.getInstance()
                         .getSongsRelay()
                         .firstOrError()
                         .map(Operators::albumShuffleSongs),
-                message -> Toast.makeText(getContext(), message, Toast.LENGTH_LONG).show());
+                message -> {
+                    Toast.makeText(getContext(), message, Toast.LENGTH_LONG).show();
+                    return Unit.INSTANCE;
+                });
     }
 
     @Override
@@ -459,17 +472,21 @@ public class AlbumFragment extends BaseFragment implements
             playlistMenuDisposable = PlaylistUtils.createUpdatingPlaylistMenu(sub).subscribe();
 
             contextualToolbar.setOnMenuItemClickListener(
-                    AlbumMenuUtils.getAlbumMenuClickListener(
+                    AlbumMenuUtils.INSTANCE.getAlbumMenuClickListener(
                             getContext(),
+                            mediaManager,
                             Single.defer(() -> Single.just(contextualToolbarHelper.getItems())),
-                            albumMenuFragmentHelper.getCallbacks())
+                            albumMenuCallbacksAdapter)
             );
 
             contextualToolbarHelper = new ContextualToolbarHelper<>(contextualToolbar, new ContextualToolbarHelper.Callback() {
 
                 @Override
-                public void notifyItemChanged(int position, SelectableViewModel viewModel) {
-                    adapter.notifyItemChanged(position, 0);
+                public void notifyItemChanged(SelectableViewModel viewModel) {
+                    int index = adapter.items.indexOf(viewModel);
+                    if (index >= 0) {
+                        adapter.notifyItemChanged(index, 0);
+                    }
                 }
 
                 @Override

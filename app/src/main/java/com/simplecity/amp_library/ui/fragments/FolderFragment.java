@@ -45,12 +45,11 @@ import com.simplecity.amp_library.utils.DataManager;
 import com.simplecity.amp_library.utils.FileBrowser;
 import com.simplecity.amp_library.utils.FileHelper;
 import com.simplecity.amp_library.utils.LogUtils;
-import com.simplecity.amp_library.utils.MusicUtils;
 import com.simplecity.amp_library.utils.SettingsManager;
 import com.simplecity.amp_library.utils.ShuttleUtils;
-import com.simplecity.amp_library.utils.sorting.SortManager;
 import com.simplecity.amp_library.utils.extensions.SongExtKt;
 import com.simplecity.amp_library.utils.menu.folder.FolderMenuUtils;
+import com.simplecity.amp_library.utils.sorting.SortManager;
 import com.simplecityapps.recycler_adapter.adapter.ViewModelAdapter;
 import com.simplecityapps.recycler_adapter.model.ViewModel;
 import com.simplecityapps.recycler_adapter.recyclerview.RecyclerListener;
@@ -66,6 +65,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import kotlin.Unit;
 import test.com.androidnavigation.fragment.BackPressListener;
 
 import static com.afollestad.aesthetic.Rx.distinctToMainThread;
@@ -414,7 +414,7 @@ public class FolderFragment extends BaseFragment implements
     @SuppressLint("CheckResult")
     @Override
     public void onFileObjectClick(int position, FolderView folderView) {
-        if (contextualToolbarHelper != null && !contextualToolbarHelper.handleClick(position, folderView, folderView.baseFileObject)) {
+        if (contextualToolbarHelper != null && !contextualToolbarHelper.handleClick(folderView, folderView.baseFileObject)) {
             if (folderView.baseFileObject.fileType == FileType.FILE) {
                 FileHelper.getSongList(new File(folderView.baseFileObject.path), false, true)
                         .observeOn(AndroidSchedulers.mainThread())
@@ -427,10 +427,11 @@ public class FolderFragment extends BaseFragment implements
                                     break;
                                 }
                             }
-                            MusicUtils.playAll(songs, index, true, (String message) -> {
+                            mediaManager.playAll(songs, index, true, message -> {
                                 if (isAdded() && getContext() != null) {
                                     Toast.makeText(getContext(), message, Toast.LENGTH_SHORT).show();
                                 }
+                                return Unit.INSTANCE;
                             });
                         }, error -> LogUtils.logException(TAG, "Error playing all", error));
             } else {
@@ -444,8 +445,8 @@ public class FolderFragment extends BaseFragment implements
     @Override
     public void onFileObjectOverflowClick(View v, FolderView folderView) {
         PopupMenu menu = new PopupMenu(getActivity(), v);
-        FolderMenuUtils.setupFolderMenu(menu, folderView.baseFileObject);
-        menu.setOnMenuItemClickListener(FolderMenuUtils.getFolderMenuClickListener(getContext(), folderView, callbacks));
+        FolderMenuUtils.INSTANCE.setupFolderMenu(menu, folderView.baseFileObject);
+        menu.setOnMenuItemClickListener(FolderMenuUtils.INSTANCE.getFolderMenuClickListener(getContext(), mediaManager, folderView, callbacks));
         menu.show();
     }
 
@@ -481,8 +482,11 @@ public class FolderFragment extends BaseFragment implements
 
             contextualToolbarHelper = new ContextualToolbarHelper<>(contextualToolbar, new ContextualToolbarHelper.Callback() {
                 @Override
-                public void notifyItemChanged(int position, SelectableViewModel viewModel) {
-                    adapter.notifyItemChanged(position, 0);
+                public void notifyItemChanged(SelectableViewModel viewModel) {
+                    int index = adapter.items.indexOf(viewModel);
+                    if (index >= 0) {
+                        adapter.notifyItemChanged(index, 0);
+                    }
                 }
 
                 @Override
@@ -676,7 +680,10 @@ public class FolderFragment extends BaseFragment implements
 
         @Override
         public void playNext(Single<List<Song>> songsSingle) {
-            MusicUtils.playNext(songsSingle, message -> Toast.makeText(getContext(), message, Toast.LENGTH_LONG).show());
+            mediaManager.playNext(songsSingle, message -> {
+                Toast.makeText(getContext(), message, Toast.LENGTH_LONG).show();
+                return Unit.INSTANCE;
+            });
         }
     };
 }

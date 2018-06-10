@@ -7,6 +7,7 @@ import android.support.annotation.Nullable;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.PopupMenu;
 import android.view.LayoutInflater;
+import android.view.SubMenu;
 import android.view.View;
 import android.view.ViewGroup;
 import com.annimon.stream.Stream;
@@ -19,7 +20,8 @@ import com.simplecity.amp_library.utils.ComparisonUtils;
 import com.simplecity.amp_library.utils.DataManager;
 import com.simplecity.amp_library.utils.LogUtils;
 import com.simplecity.amp_library.utils.PermissionUtils;
-import com.simplecity.amp_library.utils.menu.genre.GenreMenuFragmentHelper;
+import com.simplecity.amp_library.utils.PlaylistUtils;
+import com.simplecity.amp_library.utils.menu.genre.GenreMenuCallbacksAdapter;
 import com.simplecity.amp_library.utils.menu.genre.GenreMenuUtils;
 import com.simplecityapps.recycler_adapter.model.ViewModel;
 import com.simplecityapps.recycler_adapter.recyclerview.RecyclerListener;
@@ -52,7 +54,7 @@ public class GenreFragment extends BaseFragment implements GenreView.ClickListen
 
     private CompositeDisposable disposables = new CompositeDisposable();
 
-    private GenreMenuFragmentHelper genreMenuFragmentHelper = new GenreMenuFragmentHelper(this, disposables);
+    private GenreMenuCallbacksAdapter genreMenuCallbacksAdapter = new GenreMenuCallbacksAdapter(this, disposables);
 
     public GenreFragment() {
 
@@ -152,7 +154,12 @@ public class GenreFragment extends BaseFragment implements GenreView.ClickListen
     public void onOverflowClick(View v, Genre genre) {
         PopupMenu popupMenu = new PopupMenu(getContext(), v);
         popupMenu.inflate(R.menu.menu_genre);
-        popupMenu.setOnMenuItemClickListener(GenreMenuUtils.getGenreClickListener(getContext(), genre, genreMenuFragmentHelper.getCallbacks()));
+
+        // Add playlist menu
+        SubMenu sub = popupMenu.getMenu().findItem(R.id.addToPlaylist).getSubMenu();
+        PlaylistUtils.createPlaylistMenu(sub);
+
+        popupMenu.setOnMenuItemClickListener(GenreMenuUtils.INSTANCE.getGenreClickListener(getContext(), mediaManager, genre, genreMenuCallbacksAdapter));
         popupMenu.show();
     }
 
