@@ -70,3 +70,12 @@ gradle-app.setting
 # Private deployment keys
 /deployment_keys.json
 /secrets.tar
+app/src/main/res/values/com_crashlytics_export_strings\.xml
+
+app/fabric\.properties
+
+\.idea/
+
+app/free/release/output\.json
+
+app/src/main/assets/crashlytics-build\.properties
