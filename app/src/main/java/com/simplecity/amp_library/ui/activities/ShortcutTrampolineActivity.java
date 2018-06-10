@@ -23,19 +23,19 @@ public class ShortcutTrampolineActivity extends AppCompatActivity {
 
         final String action = getIntent().getAction();
         switch (action) {
-            case MusicService.ShortcutCommands.PLAY:
+            case ShortcutCommands.PLAY:
                 Intent intent = new Intent(this, MusicService.class);
                 intent.setAction(action);
                 startService(intent);
                 finish();
                 break;
-            case MusicService.ShortcutCommands.SHUFFLE_ALL:
+            case ShortcutCommands.SHUFFLE_ALL:
                 intent = new Intent(this, MusicService.class);
                 intent.setAction(action);
                 startService(intent);
                 finish();
                 break;
-            case MusicService.ShortcutCommands.FOLDERS:
+            case ShortcutCommands.FOLDERS:
                 intent = new Intent(this, MainActivity.class);
                 intent.setAction(action);
                 startActivity(intent);
