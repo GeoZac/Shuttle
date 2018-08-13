@@ -79,14 +79,13 @@ object Dependencies {
     object Plugins {
 
         object Versions {
-            const val androidGradlePlugin = "3.2.0-beta01"
+            const val androidGradlePlugin = "3.2.0-beta05"
             const val kotlin = "1.2.51"
             const val dexcountGradlePlugin = "0.8.3"
             const val fabricGradlePlugin = "1.+"
             const val playPublisher = "1.2.2"
             const val gradleVersions = "0.20.0"
             const val playServices = "4.0.1"
-            const val firebasePlugin = "1.1.5"
         }
 
         const val android = "com.android.tools.build:gradle:${Versions.androidGradlePlugin}"
@@ -96,7 +95,6 @@ object Dependencies {
         const val playPublisher = "com.github.triplet.gradle:play-publisher:${Versions.playPublisher}"
         const val gradleVersions = "com.github.ben-manes:gradle-versions-plugin:${Versions.gradleVersions}"
         const val playServices = "com.google.gms:google-services:${Versions.playServices}"
-        const val firebase = "com.google.firebase:firebase-plugins:${Versions.firebasePlugin}"
     }
 
     object Google {
@@ -107,7 +105,6 @@ object Dependencies {
             const val firebaseRemoteConfig = "16.0.0"
             const val chromecast = "15.0.1"
             const val constraintLayout = "1.1.0-beta5"
-            const val firebasePerf = "16.0.0"
         }
 
         const val cardView = "com.android.support:cardview-v7:${Versions.supportLib}"
@@ -123,7 +120,6 @@ object Dependencies {
         const val constraintLayout = "com.android.support.constraint:constraint-layout:${Versions.constraintLayout}"
         const val prefCompat = "com.android.support:preference-v7:${Versions.supportLib}"
         const val prefCompatv14 = "com.android.support:preference-v14:${Versions.supportLib}"
-        const val firebasePerf = "com.google.firebase:firebase-perf:${Versions.firebasePerf}"
     }
 
     object Square {
@@ -147,6 +143,7 @@ object Dependencies {
         const val retrofitGson = "com.squareup.retrofit2:converter-gson:${Versions.retrofitGson}"
         const val sqlBrite = "com.squareup.sqlbrite2:sqlbrite:${Versions.sqlBrite}"
     }
+
 
     object Rx {
 
@@ -188,6 +185,7 @@ object Dependencies {
         const val traceur = "com.tspoon.traceur:traceur:${Versions.traceur}"
     }
 
+
     object Testing {
 
         object Versions {
@@ -225,6 +223,7 @@ object Dependencies {
         const val assertj = "org.assertj:assertj-core:${Versions.assertj}"
     }
 
+
     object Projects {
 
         // Cast Companion Library
@@ -247,6 +246,7 @@ object Dependencies {
     }
 
     object BuildPlugins {
+
         const val androidApplication = "com.android.application"
         const val androidLibrary = "com.android.library"
         const val kotlin = "kotlin-android"
@@ -257,7 +257,6 @@ object Dependencies {
         const val playPublisher = "com.github.triplet.play"
         const val gradleVersions = "com.github.ben-manes.versions"
         const val playServices = "com.google.gms.google-services"
-        const val firebasePerf = "com.google.firebase.firebase-perf"
     }
 }
 
