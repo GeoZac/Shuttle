@@ -43,12 +43,10 @@ import com.simplecity.amp_library.utils.LegacyUtils;
 import com.simplecity.amp_library.utils.LogUtils;
 import com.simplecity.amp_library.utils.SettingsManager;
 import com.simplecity.amp_library.utils.StringUtils;
-import com.simplecity.amp_library.utils.sorting.SortManager;
 import com.squareup.leakcanary.LeakCanary;
 import com.squareup.leakcanary.RefWatcher;
 import io.fabric.sdk.android.Fabric;
 import io.reactivex.Completable;
-import io.reactivex.CompletableTransformer;
 import io.reactivex.Observable;
 import io.reactivex.schedulers.Schedulers;
 import java.io.File;
@@ -109,14 +107,6 @@ public class ShuttleApplication extends Application {
             // Traceur.enableLogging();
 
             // enableStrictMode();
-        }
-
-        // Todo: Remove after 2.0.5-beta2
-        if (BuildConfig.VERSION_NAME.equals("2.0.5-beta2")) {
-            int genreDetailSongsSortOrder = SortManager.getInstance().getGenreDetailSongsSortOrder();
-            if (genreDetailSongsSortOrder == SortManager.SongSort.DEFAULT) {
-                SortManager.getInstance().setGenreDetailSongsSortOrder(SortManager.SongSort.DETAIL_DEFAULT);
-            }
         }
 
         appComponent = initDagger(this);
@@ -183,6 +173,8 @@ public class ShuttleApplication extends Application {
                             ),
                     query);
         })
+                .doOnError(throwable -> LogUtils.logException(TAG, "Error updating user selected artwork", throwable))
+                .onErrorComplete()
                 .subscribeOn(Schedulers.io())
                 .subscribe();
 
@@ -213,14 +205,6 @@ public class ShuttleApplication extends Application {
                 .onErrorComplete()
                 .subscribeOn(Schedulers.io())
                 .subscribe();
-    }
-
-    CompletableTransformer doOnDelay(long delay, TimeUnit timeUnit) {
-        return upstream -> Completable.timer(delay, timeUnit)
-                .andThen(Completable.defer(() -> upstream))
-                .doOnError(throwable -> LogUtils.logException(TAG, "Failed to delete old resources", throwable))
-                .onErrorComplete()
-                .subscribeOn(Schedulers.io());
     }
 
     public RefWatcher getRefWatcher() {
