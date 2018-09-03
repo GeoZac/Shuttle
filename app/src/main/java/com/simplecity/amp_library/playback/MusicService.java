@@ -32,6 +32,7 @@ import com.simplecity.amp_library.playback.constants.ShortcutCommands;
 import com.simplecity.amp_library.playback.constants.WidgetManager;
 import com.simplecity.amp_library.services.Equalizer;
 import com.simplecity.amp_library.ui.queue.QueueItem;
+import com.simplecity.amp_library.utils.AnalyticsManager;
 import com.simplecity.amp_library.utils.LogUtils;
 import com.simplecity.amp_library.utils.MediaButtonIntentReceiver;
 import com.simplecity.amp_library.utils.PlaylistUtils;
@@ -97,6 +98,8 @@ public class MusicService extends MediaBrowserServiceCompat {
     public void onCreate() {
         super.onCreate();
 
+        AnalyticsManager.dropBreadcrumb(TAG, "onCreate()");
+
         mPackageValidator = new PackageValidator(this);
 
         queueManager = new QueueManager(musicServiceCallbacks);
@@ -138,6 +141,7 @@ public class MusicService extends MediaBrowserServiceCompat {
         this.shutdownIntent = PendingIntent.getService(this, 0, shutdownIntent, 0);
 
         // Listen for the idle state
+        AnalyticsManager.dropBreadcrumb(TAG, "onCreate(), scheduling delayed shutdown");
         scheduleDelayedShutdown();
 
         reloadQueue();
@@ -146,6 +150,7 @@ public class MusicService extends MediaBrowserServiceCompat {
     @Override
     public IBinder onBind(final Intent intent) {
 
+        AnalyticsManager.dropBreadcrumb(TAG, "onBind().. cancelShutdown()");
         cancelShutdown();
         serviceInUse = true;
 
@@ -188,12 +193,15 @@ public class MusicService extends MediaBrowserServiceCompat {
 
     @Override
     public void onRebind(Intent intent) {
+        AnalyticsManager.dropBreadcrumb(TAG, "onRebind().. cancelShutdown()");
         cancelShutdown();
         serviceInUse = true;
     }
 
     @Override
     public boolean onUnbind(Intent intent) {
+        AnalyticsManager.dropBreadcrumb(TAG, "onUnbind()");
+
         serviceInUse = false;
         saveState(true);
 
@@ -204,10 +212,15 @@ public class MusicService extends MediaBrowserServiceCompat {
             // If there is a playlist but playback is paused, then wait a while before stopping the service, so that pause/resume isn't slow.
             // Also delay stopping the service if we're transitioning between tracks.
         } else if (queueManager.playlist.size() > 0 || queueManager.shuffleList.size() > 0 || playbackManager.hasTrackEndedMessage()) {
+            AnalyticsManager.dropBreadcrumb(TAG, String.format("onUnbind() scheduling delayed shutdown. Playlist size: %d queue size: %d has track ended message: %s",
+                    queueManager.playlist.size(), queueManager.shuffleList.size(), playbackManager.hasTrackEndedMessage())
+            );
+
             scheduleDelayedShutdown();
             return true;
         }
 
+        AnalyticsManager.dropBreadcrumb(TAG, "stopSelf() called");
         stopSelf(serviceStartId);
 
         // Shutdown the EQ
@@ -218,9 +231,12 @@ public class MusicService extends MediaBrowserServiceCompat {
 
     @Override
     public void onTaskRemoved(Intent rootIntent) {
+        AnalyticsManager.dropBreadcrumb(TAG, "onTaskRemoved()");
+
         //If nothing is playing, and won't be playing any time soon, we can stop the service.
         //Presumably this is what the user wanted.
         if (!isPlaying() && !playbackManager.pausedByTransientLossOfFocus) {
+            AnalyticsManager.dropBreadcrumb(TAG, "stopSelf() called");
             stopSelf();
         }
 
@@ -228,7 +244,17 @@ public class MusicService extends MediaBrowserServiceCompat {
     }
 
     @Override
+    public void onLowMemory() {
+        super.onLowMemory();
+
+        AnalyticsManager.dropBreadcrumb(TAG, "onLowMemory()");
+    }
+
+    @Override
     public void onDestroy() {
+        AnalyticsManager.dropBreadcrumb(TAG, "onDestroy()");
+        Log.i(TAG, "onDestroy()");
+
         saveState(true);
 
         //Shutdown the EQ
@@ -263,7 +289,10 @@ public class MusicService extends MediaBrowserServiceCompat {
 
         if (intent != null) {
             final String action = intent.getAction();
+
             String cmd = intent.getStringExtra("command");
+
+            AnalyticsManager.dropBreadcrumb(TAG, String.format("onStartCommand() Action: %s, Command: %s", action, cmd));
 
             if (MediaButtonCommand.NEXT.equals(cmd) || ServiceCommand.NEXT_ACTION.equals(action)) {
                 gotoNext(true);
@@ -274,18 +303,20 @@ public class MusicService extends MediaBrowserServiceCompat {
                     seekTo(0);
                     play();
                 }
-            } else if (MediaButtonCommand.TOGGLE_PAUSE.equals(cmd)
-                    || ServiceCommand.TOGGLE_PAUSE_ACTION.equals(action)) {
+            } else if (MediaButtonCommand.TOGGLE_PAUSE.equals(cmd) || ServiceCommand.TOGGLE_PAUSE_ACTION.equals(action)) {
                 if (isPlaying()) {
+                    AnalyticsManager.dropBreadcrumb(TAG, "Pausing due to media button or service command");
                     pause();
                 } else {
                     play();
                 }
             } else if (MediaButtonCommand.PAUSE.equals(cmd) || ServiceCommand.PAUSE_ACTION.equals(action)) {
+                AnalyticsManager.dropBreadcrumb(TAG, "Pausing due to media button or service command (2)");
                 pause();
             } else if (MediaButtonCommand.PLAY.equals(cmd)) {
                 play();
             } else if (ServiceCommand.STOP_ACTION.equals(action) || MediaButtonCommand.STOP.equals(action)) {
+                AnalyticsManager.dropBreadcrumb(TAG, "Pausing due to media button or service stop command");
                 pause();
                 releaseServiceUiAndStop();
                 notificationStateHandler.removeCallbacksAndMessages(null);
@@ -319,6 +350,8 @@ public class MusicService extends MediaBrowserServiceCompat {
         }
 
         // Make sure the service will shut down on its own if it was  just started but not bound to and nothing is playing
+        AnalyticsManager.dropBreadcrumb(TAG, "onStartCommand() scheduling delayed shutdown");
+
         scheduleDelayedShutdown();
 
         if (intent != null && intent.getBooleanExtra(MediaButtonCommand.FROM_MEDIA_BUTTON, false)) {
@@ -333,6 +366,8 @@ public class MusicService extends MediaBrowserServiceCompat {
         public void onReceive(final Context context, final Intent intent) {
             final String action = intent.getAction();
             final String command = intent.getStringExtra("command");
+
+            AnalyticsManager.dropBreadcrumb(TAG, String.format("onReceive() Action: %s, Command: %s", action, command));
 
             if (MediaButtonCommand.NEXT.equals(command) || ServiceCommand.NEXT_ACTION.equals(action)) {
                 gotoNext(true);
@@ -372,6 +407,9 @@ public class MusicService extends MediaBrowserServiceCompat {
      * Release resources and destroy the service.
      */
     void releaseServiceUiAndStop() {
+
+        AnalyticsManager.dropBreadcrumb(TAG, "releaseServiceUiAndStop()");
+
         playbackManager.release();
 
         cancelNotification();
@@ -383,6 +421,7 @@ public class MusicService extends MediaBrowserServiceCompat {
             Intent shutdownEqualizer = new Intent(MusicService.this, Equalizer.class);
             stopService(shutdownEqualizer);
 
+            AnalyticsManager.dropBreadcrumb(TAG, "stopSelf() called");
             stopSelf(serviceStartId);
         }
     }
@@ -519,6 +558,7 @@ public class MusicService extends MediaBrowserServiceCompat {
      * Stops playback
      */
     public void stop() {
+        AnalyticsManager.dropBreadcrumb(TAG, "stop()");
         synchronized (this) {
             playbackManager.stop(true);
         }
@@ -528,6 +568,7 @@ public class MusicService extends MediaBrowserServiceCompat {
      * Pauses playback
      */
     public void pause() {
+        AnalyticsManager.dropBreadcrumb(TAG, "pause()");
         synchronized (this) {
             playbackManager.pause();
         }
@@ -781,11 +822,20 @@ public class MusicService extends MediaBrowserServiceCompat {
     }
 
     private void scheduleDelayedShutdown() {
+        if (isPlaying() || serviceInUse || playbackManager.pausedByTransientLossOfFocus) {
+            AnalyticsManager.dropBreadcrumb(TAG,
+                    String.format("scheduleDelayedShutdown called.. returning early. isPlaying: %s service in use: %s paused by loss of focus: %s",
+                            isPlaying(), serviceInUse, playbackManager.pausedByTransientLossOfFocus));
+            return;
+        }
+
+        AnalyticsManager.dropBreadcrumb(TAG, "scheduleDelayedShutdown for 5 mins from now");
         alarmManager.set(AlarmManager.ELAPSED_REALTIME_WAKEUP, SystemClock.elapsedRealtime() + 5 * 60 * 1000 /* 5 mins */, shutdownIntent);
         shutdownScheduled = true;
     }
 
     private void cancelShutdown() {
+        AnalyticsManager.dropBreadcrumb(TAG, "cancelShutdown() called. Shutdown scheduled: " + shutdownScheduled);
         if (shutdownScheduled) {
             alarmManager.cancel(shutdownIntent);
             shutdownScheduled = false;
@@ -848,10 +898,14 @@ public class MusicService extends MediaBrowserServiceCompat {
             notificationStateHandler.sendEmptyMessage(NotificationStateHandler.START_FOREGROUND);
             Song song = queueManager.getCurrentSong();
             if (song != null) {
+                Log.i(TAG, "startForeground called");
                 notificationHelper.startForeground(this, queueManager.getCurrentSong(), isPlaying(), playbackManager.getMediaSessionToken());
+            } else {
+                Log.e(TAG, "startForeground should have been called, but song is null");
             }
         } catch (NullPointerException | ConcurrentModificationException e) {
             Crashlytics.log("startForegroundImpl error: " + e.getMessage());
+            Log.e(TAG, "startForeground should have been called, but an exfeption occured: " + e);
         }
     }
 
@@ -865,6 +919,7 @@ public class MusicService extends MediaBrowserServiceCompat {
         if (withDelay) {
             notificationStateHandler.sendEmptyMessageDelayed(NotificationStateHandler.STOP_FOREGROUND, 1500);
         } else {
+            Log.i(TAG, "Stop foreground called");
             stopForeground(removeNotification);
         }
     }
