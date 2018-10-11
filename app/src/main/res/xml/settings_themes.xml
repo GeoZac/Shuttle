@@ -24,11 +24,11 @@
             android:title="@string/pref_title_theme_pick_accent_color"/>
 
         <android.support.v7.preference.SwitchPreferenceCompat
-            android:defaultValue="false"
+            android:defaultValue="true"
             android:key="pref_nav_bar"
             android:summary="@string/pref_summary_tinted_nav"
             android:title="@string/pref_title_tinted_nav"
-            app:defaultValue="false"/>
+            app:defaultValue="true"/>
 
     </android.support.v7.preference.PreferenceCategory>
 

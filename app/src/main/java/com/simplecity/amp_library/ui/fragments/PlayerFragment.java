@@ -27,6 +27,7 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.Unbinder;
 import com.afollestad.aesthetic.Aesthetic;
+import com.afollestad.aesthetic.Util;
 import com.afollestad.aesthetic.ColorIsDarkState;
 import com.afollestad.materialdialogs.MaterialDialog;
 import com.bumptech.glide.Glide;
@@ -67,6 +68,7 @@ import com.simplecity.amp_library.ui.views.RepeatingImageButton;
 import com.simplecity.amp_library.ui.views.ShuffleButton;
 import com.simplecity.amp_library.ui.views.SizableSeekBar;
 import com.simplecity.amp_library.ui.views.SnowfallView;
+import com.simplecity.amp_library.ui.views.ThemedStatusBarView;
 import com.simplecity.amp_library.ui.views.multisheet.MultiSheetSlideEventRelay;
 import com.simplecity.amp_library.utils.DataManager;
 import com.simplecity.amp_library.utils.LogUtils;
@@ -149,6 +151,10 @@ public class PlayerFragment extends BaseFragment implements
     @BindView(R.id.let_it_snow)
     SnowfallView snowfallView;
 
+    @BindView(R.id.statusBarView)
+    ThemedStatusBarView statusBarView;
+
+
     CompositeDisposable disposables = new CompositeDisposable();
 
     @Inject
@@ -206,6 +212,8 @@ public class PlayerFragment extends BaseFragment implements
         isLandscape = ShuttleUtils.isLandscape();
 
         unbinder = ButterKnife.bind(this, view);
+
+        statusBarView.setVisibility(View.VISIBLE);
 
         toolbar.setNavigationOnClickListener(v -> getActivity().onBackPressed());
         toolbar.inflateMenu(R.menu.menu_now_playing);
@@ -524,6 +532,7 @@ public class PlayerFragment extends BaseFragment implements
 
         if (!isLandscape && backgroundView != null) {
             backgroundView.setBackgroundColor(colorSet.getPrimaryColor());
+            statusBarView.setBackgroundColor(colorSet.getPrimaryColor());
         }
 
         if (!isLandscape && currentTime != null) {
@@ -686,6 +695,17 @@ public class PlayerFragment extends BaseFragment implements
                         // We need to update the nav bar colour at the same time, since it's visible as well.
                         if (SettingsManager.getInstance().getTintNavBar()) {
                             Aesthetic.get(getContext()).colorNavigationBar(intermediateColorSet.getPrimaryColor()).apply();
+                            try {
+                                if (!Util.isColorLight(intermediateColorSet.getPrimaryColor())) {
+                                  getView().setSystemUiVisibility(0);
+                                    
+                                } else {
+                                    getView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR);
+                                    getView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR);
+                                }
+                            } catch (Exception e){
+                                    Log.d(TAG,e.getMessage());
+                            }
                         }
                     },
                     () -> {
