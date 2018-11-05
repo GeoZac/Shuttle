@@ -28,8 +28,8 @@ import com.simplecity.amp_library.ui.fragments.BaseFragment
 import com.simplecity.amp_library.ui.modelviews.SelectableViewModel
 import com.simplecity.amp_library.ui.modelviews.SubheaderView
 import com.simplecity.amp_library.ui.presenters.PlayerPresenter
-import com.simplecity.amp_library.ui.recyclerview.ItemTouchHelperCallback
 import com.simplecity.amp_library.ui.views.ContextualToolbar
+import com.simplecity.amp_library.ui.views.LockActionBarView
 import com.simplecity.amp_library.ui.views.PlayerViewAdapter
 import com.simplecity.amp_library.ui.views.multisheet.MultiSheetSlideEventRelay
 import com.simplecity.amp_library.utils.ContextualToolbarHelper
@@ -37,8 +37,10 @@ import com.simplecity.amp_library.utils.ContextualToolbarHelper.Callback
 import com.simplecity.amp_library.utils.PermissionUtils
 import com.simplecity.amp_library.utils.PlaylistUtils
 import com.simplecity.amp_library.utils.ResourceUtils
+import com.simplecity.amp_library.utils.SettingsManager
 import com.simplecity.amp_library.utils.ShuttleUtils
 import com.simplecity.amp_library.utils.StringUtils
+import com.simplecity.amp_library.utils.menu.MenuUtils
 import com.simplecity.amp_library.utils.menu.queue.QueueMenuUtils
 import com.simplecity.amp_library.utils.menu.song.SongMenuCallbacksAdapter
 import com.simplecity.multisheetview.ui.view.MultiSheetView
@@ -83,6 +85,8 @@ class QueueFragment : BaseFragment(), QueueContract.View {
 
     private lateinit var itemTouchHelper: ItemTouchHelper
 
+    private lateinit var itemTouchHelperCallback: com.simplecity.amp_library.ui.recyclerview.ItemTouchHelperCallback
+
     private lateinit var cabToolbar: ContextualToolbar
 
     private lateinit var cabHelper: ContextualToolbarHelper<QueueItem>
@@ -107,6 +111,18 @@ class QueueFragment : BaseFragment(), QueueContract.View {
 
             override fun removeQueueItems(queueItems: Single<List<QueueItem>>) {
                 queuePresenter.removeFromQueue(queueItems)
+            }
+
+            override fun goToArtist(song: Song) {
+                MenuUtils.goToArtist(song.albumArtist, navigationEventRelay)
+            }
+
+            override fun goToAlbum(song: Song) {
+                MenuUtils.goToAlbum(song.album, navigationEventRelay)
+            }
+
+            override fun goToGenre(song: Song) {
+                MenuUtils.goToGenre(song.genre, navigationEventRelay)
             }
         }
 
@@ -134,32 +150,21 @@ class QueueFragment : BaseFragment(), QueueContract.View {
         recyclerView.setRecyclerListener(RecyclerListener())
         recyclerView.adapter = adapter
 
-        itemTouchHelper = ItemTouchHelper(object : ItemTouchHelperCallback(
-            { fromPosition, toPosition -> adapter.moveItem(fromPosition, toPosition) },
-            { from, to ->
-                val numBeforeFrom = (0..from)
-                    .map { value -> adapter.items[value] }
-                    .filter { value -> value !is QueueViewBinder }
-                    .count()
-
-                val numBeforeTo = (0..to)
-                    .map { value -> adapter.items[value] }
-                    .filter { value -> value !is QueueViewBinder }
-                    .count()
-
-                mediaManager.moveQueueItem(from - numBeforeFrom, to - numBeforeTo)
-            },
-            {
-                // Nothing to do
-            }) {
-            override fun onMove(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder, target: RecyclerView.ViewHolder): Boolean {
-                return if (viewHolder.itemViewType == target.itemViewType) {
-                    super.onMove(recyclerView, viewHolder, target)
-                } else false
-            }
-        })
-
+        itemTouchHelperCallback = ItemTouchHelperCallback()
+        itemTouchHelper = ItemTouchHelper(itemTouchHelperCallback)
         itemTouchHelper.attachToRecyclerView(recyclerView)
+
+        val lockMenuItem = toolbar.menu.findItem(R.id.menu_lock)
+        val menuActionView = lockMenuItem.actionView as LockActionBarView
+        val swipeLocked = SettingsManager.getInstance().queueSwipeLocked()
+
+        setQueueSwipeLocked(swipeLocked)
+        menuActionView.setLocked(swipeLocked, false)
+
+        menuActionView.setOnClickListener { lockActionBarView ->
+            (lockActionBarView as LockActionBarView).toggle()
+            queuePresenter.setQueueSwipeLocked(lockActionBarView.isLocked)
+        }
 
         disposables.add(Aesthetic.get(context)
             .colorPrimary()
@@ -393,6 +398,38 @@ class QueueFragment : BaseFragment(), QueueContract.View {
 
     override fun showUpgradeDialog() {
         UpgradeDialog.getUpgradeDialog(activity!!).show()
+    }
+
+    override fun setQueueSwipeLocked(locked: Boolean) {
+        itemTouchHelperCallback.setEnabled(!locked)
+    }
+
+    inner class ItemTouchHelperCallback : com.simplecity.amp_library.ui.recyclerview.ItemTouchHelperCallback(
+        { fromPosition, toPosition -> adapter.moveItem(fromPosition, toPosition) },
+        { from, to ->
+            val numBeforeFrom = (0..from)
+                .map { value -> adapter.items[value] }
+                .filter { value -> value !is QueueViewBinder }
+                .count()
+
+            val numBeforeTo = (0..to)
+                .map { value -> adapter.items[value] }
+                .filter { value -> value !is QueueViewBinder }
+                .count()
+
+            queuePresenter.moveQueueItem(from - numBeforeFrom, to - numBeforeTo)
+        },
+        {
+            // Nothing to do
+        },
+        { pos ->
+            queuePresenter.removeFromQueue((adapter.items[pos] as QueueViewBinder).queueItem)
+        }) {
+        override fun onMove(recyclerView: RecyclerView, viewHolder: RecyclerView.ViewHolder, target: RecyclerView.ViewHolder): Boolean {
+            return if (viewHolder.itemViewType == target.itemViewType) {
+                super.onMove(recyclerView, viewHolder, target)
+            } else false
+        }
     }
 
     // Static

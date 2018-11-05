@@ -36,6 +36,7 @@ import com.bumptech.glide.Glide;
 import com.bumptech.glide.Priority;
 import com.bumptech.glide.RequestManager;
 import com.bumptech.glide.load.engine.DiskCacheStrategy;
+import com.google.android.gms.cast.framework.CastButtonFactory;
 import com.simplecity.amp_library.R;
 import com.simplecity.amp_library.ShuttleApplication;
 import com.simplecity.amp_library.glide.utils.AlwaysCrossFade;
@@ -308,7 +309,8 @@ public class PlaylistDetailFragment extends BaseFragment implements
     private void setupToolbarMenu(Toolbar toolbar) {
         toolbar.inflateMenu(R.menu.menu_detail_sort);
 
-        setupCastMenu(toolbar.getMenu());
+        MenuItem menuItem = CastButtonFactory.setUpMediaRouteButton(getContext(), toolbar.getMenu(), R.id.media_route_menu_item);
+        menuItem.setVisible(true);
 
         toolbar.setOnMenuItemClickListener(this);
 
@@ -590,6 +592,9 @@ public class PlaylistDetailFragment extends BaseFragment implements
             },
             () -> {
                 // Nothing to do
+            },
+            (pos) -> {
+
             }) {
         @Override
         public boolean onMove(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, RecyclerView.ViewHolder target) {
@@ -621,7 +626,7 @@ public class PlaylistDetailFragment extends BaseFragment implements
         @Override
         public void onSongOverflowClick(int position, View v, Song song) {
             PopupMenu popupMenu = new PopupMenu(v.getContext(), v);
-            SongMenuUtils.INSTANCE.setupSongMenu(popupMenu, playlist.canEdit);
+            SongMenuUtils.INSTANCE.setupSongMenu(popupMenu, playlist.canEdit, true, true);
             popupMenu.setOnMenuItemClickListener(SongMenuUtils.INSTANCE.getSongMenuClickListener(song, songMenuCallbacksAdapter));
             popupMenu.show();
         }

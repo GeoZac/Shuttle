@@ -5,20 +5,15 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
-import android.support.v4.view.MenuItemCompat;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
-import com.google.android.libraries.cast.companionlibrary.cast.BaseCastManager;
-import com.simplecity.amp_library.R;
 import com.simplecity.amp_library.ShuttleApplication;
 import com.simplecity.amp_library.dagger.module.ActivityModule;
 import com.simplecity.amp_library.dagger.module.FragmentModule;
 import com.simplecity.amp_library.playback.MediaManager;
-import com.simplecity.amp_library.ui.activities.BaseCastActivity;
+import com.simplecity.amp_library.ui.drawer.NavigationEventRelay;
 import com.simplecity.amp_library.ui.views.CustomMediaRouteActionProvider;
 import com.simplecity.amp_library.ui.views.multisheet.MultiSheetEventRelay;
 import com.simplecity.amp_library.utils.AnalyticsManager;
@@ -39,6 +34,9 @@ public abstract class BaseFragment extends BaseController {
 
     @Inject
     protected MediaManager mediaManager;
+
+    @Inject
+    protected NavigationEventRelay navigationEventRelay;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -120,18 +118,12 @@ public abstract class BaseFragment extends BaseController {
         refWatcher.watch(this);
     }
 
-    protected void setupCastMenu(Menu menu) {
-        if (getActivity() instanceof BaseCastActivity) {
-            BaseCastManager castManager = ((BaseCastActivity) getActivity()).castManager;
-            castManager.addMediaRouterButton(menu, R.id.media_route_menu_item);
-
-            MenuItem mediaRouteMenuItem = menu.findItem(R.id.media_route_menu_item);
-            ((CustomMediaRouteActionProvider) MenuItemCompat.getActionProvider(mediaRouteMenuItem)).setActivity(getActivity());
-        }
-    }
-
     public MediaManager getMediaManager() {
         return mediaManager;
+    }
+
+    public NavigationEventRelay getNavigationEventRelay() {
+        return navigationEventRelay;
     }
 
     protected abstract String screenName();

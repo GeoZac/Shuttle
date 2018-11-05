@@ -45,6 +45,7 @@ public class RepeatButton extends android.support.v7.widget.AppCompatImageButton
         super(context, attrs, defStyleAttr);
 
         offDrawable = DrawableCompat.wrap(ContextCompat.getDrawable(context, R.drawable.ic_repeat_24dp_scaled)).mutate();
+        offDrawable.setAlpha((int) (0.6 * 255));
         oneDrawable = DrawableCompat.wrap(ContextCompat.getDrawable(context, R.drawable.ic_repeat_one_24dp_scaled)).mutate();
         allDrawable = DrawableCompat.wrap(ContextCompat.getDrawable(context, R.drawable.ic_repeat_24dp_scaled)).mutate();
 

@@ -14,6 +14,8 @@ import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
@@ -35,6 +37,7 @@ import com.bumptech.glide.request.animation.GlideAnimation;
 import com.bumptech.glide.request.target.SimpleTarget;
 import com.bumptech.glide.request.target.Target;
 import com.f2prateek.rx.preferences2.RxSharedPreferences;
+import com.google.android.gms.cast.framework.CastButtonFactory;
 import com.jakewharton.rxbinding2.widget.RxSeekBar;
 import com.jakewharton.rxbinding2.widget.SeekBarChangeEvent;
 import com.jakewharton.rxbinding2.widget.SeekBarProgressChangeEvent;
@@ -72,6 +75,8 @@ import com.simplecity.amp_library.utils.SettingsManager;
 import com.simplecity.amp_library.utils.ShuttleUtils;
 import com.simplecity.amp_library.utils.StringUtils;
 import com.simplecity.amp_library.utils.color.ArgbEvaluator;
+import com.simplecity.amp_library.utils.menu.MenuUtils;
+
 import io.reactivex.BackpressureStrategy;
 import io.reactivex.Flowable;
 import io.reactivex.Observable;
@@ -81,6 +86,7 @@ import io.reactivex.schedulers.Schedulers;
 import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 import javax.inject.Inject;
+import kotlin.Unit;
 
 public class PlayerFragment extends BaseFragment implements
         PlayerView,
@@ -203,7 +209,9 @@ public class PlayerFragment extends BaseFragment implements
 
         toolbar.setNavigationOnClickListener(v -> getActivity().onBackPressed());
         toolbar.inflateMenu(R.menu.menu_now_playing);
-        setupCastMenu(toolbar.getMenu());
+
+        MenuItem menuItem = CastButtonFactory.setUpMediaRouteButton(getContext(), toolbar.getMenu(), R.id.media_route_menu_item);
+        menuItem.setVisible(true);
 
         MenuItem favoriteMenuItem = toolbar.getMenu().findItem(R.id.favorite);
         FavoriteActionBarView menuActionView = (FavoriteActionBarView) favoriteMenuItem.getActionView();
@@ -211,10 +219,10 @@ public class PlayerFragment extends BaseFragment implements
         toolbar.setOnMenuItemClickListener(this);
 
         if (playPauseView != null) {
-            playPauseView.setOnClickListener(v -> {
-                playPauseView.toggle();
-                playPauseView.postDelayed(() -> presenter.togglePlayback(), 200);
-            });
+            playPauseView.setOnClickListener(v -> playPauseView.toggle(() -> {
+                presenter.togglePlayback();
+                return Unit.INSTANCE;
+            }));
         }
 
         if (repeatButton != null) {
@@ -233,7 +241,7 @@ public class PlayerFragment extends BaseFragment implements
         }
 
         if (prevButton != null) {
-            prevButton.setOnClickListener(v -> presenter.prev(true));
+            prevButton.setOnClickListener(v -> presenter.prev(false));
             prevButton.setRepeatListener((v, duration, repeatCount) -> presenter.scanBackward(repeatCount, duration));
         }
 
@@ -316,6 +324,7 @@ public class PlayerFragment extends BaseFragment implements
                     .ofType(SeekBarProgressChangeEvent.class)
                     .filter(SeekBarProgressChangeEvent::fromUser)
                     .debounce(15, TimeUnit.MILLISECONDS)
+                    .observeOn(AndroidSchedulers.mainThread())
                     .subscribe(
                             seekBarChangeEvent -> presenter.seekTo(seekBarChangeEvent.progress()),
                             error -> LogUtils.logException(TAG, "Error receiving seekbar progress", error))
@@ -399,12 +408,12 @@ public class PlayerFragment extends BaseFragment implements
         if (playPauseView != null) {
             if (isPlaying) {
                 if (playPauseView.isPlay()) {
-                    playPauseView.toggle();
+                    playPauseView.toggle(null);
                     playPauseView.setContentDescription(getString(R.string.btn_pause));
                 }
             } else {
                 if (!playPauseView.isPlay()) {
-                    playPauseView.toggle();
+                    playPauseView.toggle(null);
                     playPauseView.setContentDescription(getString(R.string.btn_play));
                 }
             }
@@ -600,13 +609,13 @@ public class PlayerFragment extends BaseFragment implements
                 presenter.showLyrics(getContext());
                 return true;
             case R.id.goToArtist:
-                goToArtist();
+                MenuUtils.goToArtist(mediaManager.getAlbumArtist(), navigationEventRelay);
                 return true;
             case R.id.goToAlbum:
-                goToAlbum();
+                MenuUtils.goToAlbum(mediaManager.getAlbum(), navigationEventRelay);
                 return true;
             case R.id.goToGenre:
-                goToGenre();
+                MenuUtils.goToGenre(mediaManager.getGenre(), navigationEventRelay);
                 return true;
             case R.id.editTags:
                 presenter.editTagsClicked(getActivity());
@@ -619,38 +628,6 @@ public class PlayerFragment extends BaseFragment implements
                 return true;
         }
         return false;
-    }
-
-    @SuppressLint("CheckResult")
-    private void goToArtist() {
-        AlbumArtist currentAlbumArtist = mediaManager.getAlbumArtist();
-        // MediaManager.getAlbumArtist() is only populate with the album the current Song belongs to.
-        // Let's find the matching AlbumArtist in the DataManager.albumArtistRelay
-        DataManager.getInstance().getAlbumArtistsRelay()
-                .first(Collections.emptyList())
-                .flatMapObservable(Observable::fromIterable)
-                .filter(albumArtist -> currentAlbumArtist != null && albumArtist.name.equals(currentAlbumArtist.name) && albumArtist.albums.containsAll(currentAlbumArtist.albums))
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(
-                        albumArtist -> navigationEventRelay.sendEvent(new NavigationEventRelay.NavigationEvent(NavigationEventRelay.NavigationEvent.Type.GO_TO_ARTIST, albumArtist, true)),
-                        error -> LogUtils.logException(TAG, "goToArtist error", error)
-                );
-    }
-
-    private void goToAlbum() {
-        navigationEventRelay.sendEvent(new NavigationEventRelay.NavigationEvent(NavigationEventRelay.NavigationEvent.Type.GO_TO_ALBUM, mediaManager.getAlbum(), true));
-    }
-
-    @SuppressLint("CheckResult")
-    private void goToGenre() {
-        mediaManager.getGenre()
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(
-                        (UnsafeConsumer<Genre>) genre -> navigationEventRelay.sendEvent(new NavigationEventRelay.NavigationEvent(NavigationEventRelay.NavigationEvent.Type.GO_TO_GENRE, genre, true)),
-                        error -> LogUtils.logException(TAG, "Error retrieving genre", error)
-                );
     }
 
     void animateColors(@NonNull ColorSet from, @NonNull ColorSet to, int duration, @NonNull UnsafeConsumer<ColorSet> consumer, @Nullable UnsafeAction onComplete) {
