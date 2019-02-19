@@ -232,7 +232,7 @@ public class QueueManager {
                 case RepeatMode.ONE:
                     return queuePosition < 0 ? 0 : queuePosition;
                 case RepeatMode.OFF:
-                    return queueComplete ? -1 : queuePosition + 1;
+                    return queueComplete ? -1 : queuePosition ;
                 case RepeatMode.ALL:
                     return queueComplete ? 0 : queuePosition + 1;
                 default:
