@@ -2,9 +2,9 @@ package com.simplecity.amp_library.ui.views;
 
 import android.app.Activity;
 import android.content.Context;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.v7.app.MediaRouteButton;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.mediarouter.app.MediaRouteButton;
 import android.util.AttributeSet;
 import android.view.ContextThemeWrapper;
 import com.afollestad.aesthetic.Aesthetic;

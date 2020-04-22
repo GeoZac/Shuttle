@@ -21,7 +21,7 @@ import com.google.android.gms.common.ConnectionResult;
 import com.google.android.libraries.cast.companionlibrary.cast.BaseCastManager;
 import com.google.android.libraries.cast.companionlibrary.cast.exceptions.OnFailedListener;
 
-import android.support.v7.media.MediaRouter.RouteInfo;
+import androidx.mediarouter.media.MediaRouter.RouteInfo;
 
 /**
  * An interface for receiving callbacks around the connectivity status to a Cast device.

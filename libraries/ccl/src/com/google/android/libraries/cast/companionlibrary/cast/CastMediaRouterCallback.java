@@ -21,13 +21,13 @@ import static com.google.android.libraries.cast.companionlibrary.utils.LogUtils.
 import com.google.android.gms.cast.CastDevice;
 import com.google.android.libraries.cast.companionlibrary.utils.LogUtils;
 
-import android.support.v7.media.MediaRouter;
-import android.support.v7.media.MediaRouter.RouteInfo;
+import androidx.mediarouter.media.MediaRouter;
+import androidx.mediarouter.media.MediaRouter.RouteInfo;
 
 /**
  * Provides a handy implementation of {@link MediaRouter.Callback}. When a {@link RouteInfo} is
  * selected by user from the list of available routes, this class will call the
- * {@link BaseCastManager#setDevice(CastDevice))} of the listener that was passed to it in
+ *  of the listener that was passed to it in
  * the constructor. In addition, as soon as a non-default route is discovered, the
  * {@link BaseCastManager#onCastDeviceDetected(RouteInfo))} is called.
  * <p>
