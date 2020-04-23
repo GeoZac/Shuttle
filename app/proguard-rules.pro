@@ -110,3 +110,6 @@
 
 # Keep MaterialDialogs ThemeSingleton, so we can access it via reflection, from Aesthetic
 -keep class com.afollestad.materialdialogs.internal.** { *; }
+
+# Adopted from https://github.com/afollestad/aesthetic/issues/41
+-keep class com.google.android.material.textfield.** { *; }
